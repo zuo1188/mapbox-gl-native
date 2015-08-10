@@ -130,9 +130,6 @@ public:
     // Configures the painter strata that is used for early z-culling of fragments.
     void setStrata(float strata);
 
-    void drawClippingMasks(const std::set<Source*>&);
-    void drawClippingMask(const mat4& matrix, const ClipID& clip);
-
     void resetFramebuffer();
     void bindFramebuffer();
     void pushFramebuffer();
@@ -153,8 +150,6 @@ private:
                     Iterator it, Iterator end,
                     std::size_t i, int8_t iIncrement,
                     const float strataThickness);
-
-    void prepareTile(const Tile& tile);
 
     template <typename BucketProperties, typename StyleProperties>
     void renderSDF(SymbolBucket &bucket,

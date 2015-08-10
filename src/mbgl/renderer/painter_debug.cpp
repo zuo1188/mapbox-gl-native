@@ -13,7 +13,6 @@ void Painter::renderTileDebug(const Tile& tile) {
     MBGL_DEBUG_GROUP(std::string { "debug " } + std::string(tile.id));
     assert(tile.data);
     if (debug) {
-        prepareTile(tile);
         renderDebugText(tile.data->debugBucket, tile.matrix);
         renderDebugFrame(tile.matrix);
     }
@@ -53,7 +52,6 @@ void Painter::renderDebugFrame(const mat4 &matrix) {
     // but *don't* disable stencil test, as we want to clip the red tile border
     // to the tile viewport.
     config.depthTest = false;
-    config.stencilTest = true;
 
     useProgram(plainShader->program);
     plainShader->u_matrix = matrix;

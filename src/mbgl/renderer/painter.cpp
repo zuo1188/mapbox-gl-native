@@ -80,10 +80,6 @@ void Painter::setup() {
     // Set clear values
     config.clearColor = { 0.0f, 0.0f, 0.0f, 0.0f };
     config.clearDepth = 1.0f;
-    config.clearStencil = 0x0;
-
-    // Stencil test
-    MBGL_CHECK_ERROR(glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE));
 
     // Depth test
     glDepthFunc(GL_LEQUAL);
@@ -148,22 +144,14 @@ void Painter::changeMatrix() {
 
 void Painter::clear() {
     MBGL_DEBUG_GROUP("clear");
-    config.stencilTest = true;
-    config.stencilMask = 0xFF;
     config.depthTest = false;
     config.depthMask = GL_TRUE;
     config.clearColor = { 0.0f, 0.0f, 0.0f, 0.0f };
-    MBGL_CHECK_ERROR(glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+    MBGL_CHECK_ERROR(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 }
 
 void Painter::setStrata(float value) {
     strata = value;
-}
-
-void Painter::prepareTile(const Tile& tile) {
-    const GLint ref = (GLint)tile.clip.reference.to_ulong();
-    const GLuint mask = (GLuint)tile.clip.mask.to_ulong();
-    config.stencilFunc = { GL_EQUAL, ref, mask };
 }
 
 void Painter::render(const Style& style, TransformState state_, const FrameData& frame_, const TimePoint& time) {
@@ -206,21 +194,17 @@ void Painter::render(const Style& style, TransformState state_, const FrameData&
     }
 
 
-    // - CLIPPING MASKS ----------------------------------------------------------------------------
-    // Draws the clipping masks to the stencil buffer.
+    // - MATRIX UPDATES ----------------------------------------------------------------------------
+    // Updates all matrices for all tiles.
     {
         MBGL_DEBUG_GROUP("clip");
 
         // Update all clipping IDs.
-        ClipIDGenerator generator;
         for (const auto& source : sources) {
-            generator.update(source->getLoadedTiles());
             source->updateMatrices(projMatrix, state);
         }
 
         clear();
-
-        drawClippingMasks(sources);
     }
 
     frameHistory.record(time, state.getNormalizedZoom());
@@ -291,7 +275,6 @@ void Painter::renderPass(RenderPass pass_,
             if (item.hasRenderPass(pass)) {
                 MBGL_DEBUG_GROUP(item.layer.id + " - " + std::string(item.tile->id));
                 setStrata(i * strataThickness);
-                prepareTile(*item.tile);
                 item.bucket->render(*this, item.layer, item.tile->id, item.tile->matrix);
             }
         } else {
@@ -460,7 +443,6 @@ void Painter::renderBackground(const StyleLayer &layer_desc) {
         backgroundArray.bind(*plainShader, backgroundBuffer, BUFFER_OFFSET(0));
     }
 
-    config.stencilTest = false;
     config.depthTest = true;
     config.depthRange = { strata + strata_epsilon, 1.0f };
     MBGL_CHECK_ERROR(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));

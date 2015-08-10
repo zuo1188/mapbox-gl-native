@@ -18,7 +18,6 @@ void Painter::renderLine(LineBucket& bucket, const StyleLayer &layer_desc, const
     // Abort early.
     if (pass == RenderPass::Opaque) return;
 
-    config.stencilTest = true;
     config.depthTest = true;
     config.depthMask = GL_FALSE;
 

@@ -124,8 +124,6 @@ void Painter::renderSymbol(SymbolBucket &bucket, const StyleLayer &layer_desc, c
     config.depthMask = GL_FALSE;
 
     if (bucket.hasCollisionBoxData()) {
-        config.stencilTest = true;
-
         useProgram(collisionBoxShader->program);
         collisionBoxShader->u_matrix = matrix;
         collisionBoxShader->u_scale = std::pow(2, state.getNormalizedZoom() - id.z);
@@ -137,17 +135,6 @@ void Painter::renderSymbol(SymbolBucket &bucket, const StyleLayer &layer_desc, c
         bucket.drawCollisionBoxes(*collisionBoxShader);
 
     }
-
-    // TODO remove the `|| true` when #1673 is implemented
-    const bool drawAcrossEdges = !(layout.text.allow_overlap || layout.icon.allow_overlap ||
-          layout.text.ignore_placement || layout.icon.ignore_placement) || true;
-
-    // Disable the stencil test so that labels aren't clipped to tile boundaries.
-    //
-    // Layers with features that may be drawn overlapping aren't clipped. These
-    // layers are sorted in the y direction, and to draw the correct ordering near
-    // tile edges the icons are included in both tiles and clipped when drawing.
-    config.stencilTest = drawAcrossEdges ? false : true;
 
     if (bucket.hasIconData()) {
         bool sdf = bucket.sdfIcons;
