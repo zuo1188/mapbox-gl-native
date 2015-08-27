@@ -70,6 +70,18 @@ CLLocationDegrees MGLDegreesFromRadians(CGFloat radians)
     return radians * 180 / M_PI;
 }
 
+mbgl::util::UnitBezier MGLUnitBezierForMediaTimingFunction(CAMediaTimingFunction *function)
+{
+    if ( ! function)
+    {
+        function = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionDefault];
+    }
+    float p1[2], p2[2];
+    [function getControlPointAtIndex:0 values:p1];
+    [function getControlPointAtIndex:1 values:p2];
+    return { p1[0], p1[1], p2[0], p2[1] };
+}
+
 #pragma mark - Private -
 
 @interface MGLMapView () <UIGestureRecognizerDelegate, GLKViewDelegate, CLLocationManagerDelegate, UIActionSheetDelegate>
@@ -1548,16 +1560,7 @@ std::chrono::steady_clock::duration secondsAsDuration(float duration)
 
 - (void)setCenterCoordinate:(CLLocationCoordinate2D)coordinate animated:(BOOL)animated
 {
-    mbgl::CameraOptions options;
-    options.center = MGLLatLngFromLocationCoordinate2D(coordinate);
-    options.zoom = fmaxf(_mbglMap->getZoom(), self.currentMinimumZoom);
-    if (animated)
-    {
-        options.duration = secondsAsDuration(MGLAnimationDuration);
-    }
-    _mbglMap->easeTo(options);
-
-    [self notifyMapChange:(animated ? mbgl::MapChangeRegionDidChangeAnimated : mbgl::MapChangeRegionDidChange)];
+    [self setCenterCoordinate:coordinate zoomLevel:self.zoomLevel animated:animated];
 }
 
 - (void)setCenterCoordinate:(CLLocationCoordinate2D)centerCoordinate
@@ -1586,7 +1589,7 @@ std::chrono::steady_clock::duration secondsAsDuration(float duration)
 {
     mbgl::CameraOptions options;
     options.center = MGLLatLngFromLocationCoordinate2D(centerCoordinate);
-    options.zoom = zoomLevel;
+    options.zoom = fmaxf(zoomLevel, self.currentMinimumZoom);
     if (direction >= 0)
     {
         options.angle = MGLRadiansFromDegrees(-direction);
@@ -1594,6 +1597,7 @@ std::chrono::steady_clock::duration secondsAsDuration(float duration)
     if (animated)
     {
         options.duration = secondsAsDuration(MGLAnimationDuration);
+        options.easing = MGLUnitBezierForMediaTimingFunction(nil);
     }
     _mbglMap->easeTo(options);
 
@@ -1612,26 +1616,14 @@ std::chrono::steady_clock::duration secondsAsDuration(float duration)
     return _mbglMap->getZoom();
 }
 
-- (void)setZoomLevel:(double)zoomLevel animated:(BOOL)animated
-{
-    self.userTrackingMode = MGLUserTrackingModeNone;
-
-    mbgl::CameraOptions options;
-    options.zoom = fmaxf(zoomLevel, self.currentMinimumZoom);
-    if (animated)
-    {
-        options.duration = secondsAsDuration(MGLAnimationDuration);
-    }
-    _mbglMap->easeTo(options);
-
-    [self unrotateIfNeededAnimated:animated];
-
-    [self notifyMapChange:(animated ? mbgl::MapChangeRegionDidChangeAnimated : mbgl::MapChangeRegionDidChange)];
-}
-
 - (void)setZoomLevel:(double)zoomLevel
 {
     [self setZoomLevel:zoomLevel animated:NO];
+}
+
+- (void)setZoomLevel:(double)zoomLevel animated:(BOOL)animated
+{
+    [self setCenterCoordinate:self.centerCoordinate zoomLevel:zoomLevel animated:animated];
 }
 
 MGLCoordinateBounds MGLCoordinateBoundsFromLatLngBounds(mbgl::LatLngBounds latLngBounds)
@@ -1697,8 +1689,6 @@ mbgl::LatLngBounds MGLLatLngBoundsFromCoordinateBounds(MGLCoordinateBounds coord
 - (void)setVisibleCoordinates:(CLLocationCoordinate2D *)coordinates count:(NSUInteger)count edgePadding:(UIEdgeInsets)insets direction:(CLLocationDirection)direction animated:(BOOL)animated
 {
     // NOTE: does not disrupt tracking mode
-    CGFloat duration = animated ? MGLAnimationDuration : 0;
-    
     [self willChangeValueForKey:@"visibleCoordinateBounds"];
     mbgl::EdgeInsets mbglInsets = {insets.top, insets.left, insets.bottom, insets.right};
     mbgl::AnnotationSegment segment;
@@ -1712,7 +1702,11 @@ mbgl::LatLngBounds MGLLatLngBoundsFromCoordinateBounds(MGLCoordinateBounds coord
     {
         options.angle = MGLRadiansFromDegrees(-direction);
     }
-    options.duration = secondsAsDuration(duration);
+    if (animated)
+    {
+        options.duration = secondsAsDuration(MGLAnimationDuration);
+        options.easing = MGLUnitBezierForMediaTimingFunction(nil);
+    }
     _mbglMap->easeTo(options);
     [self didChangeValueForKey:@"visibleCoordinateBounds"];
     
@@ -1782,24 +1776,23 @@ mbgl::LatLngBounds MGLLatLngBoundsFromCoordinateBounds(MGLCoordinateBounds coord
 - (MGLMapCamera *)camera
 {
     CGSize size = self.bounds.size;
-    mbgl::ProjectedMeters topLeftMeters;
-    CGPoint opposite;
+    CGPoint pointA, pointB;
     if (size.width > size.height) // landscape
     {
-        CLLocationCoordinate2D centerLeft = [self convertPoint:CGPointMake(0, size.height / 2) toCoordinateFromView:self];
-        topLeftMeters = _mbglMap->projectedMetersForLatLng(MGLLatLngFromLocationCoordinate2D(centerLeft));
-        opposite = CGPointMake(size.width, 0);
+        pointA = CGPointMake(0, size.height / 2.);
+        pointB = CGPointMake(size.width, 0);
     }
     else // portrait
     {
-        CLLocationCoordinate2D topCenter = [self convertPoint:CGPointMake(size.width / 2, 0) toCoordinateFromView:self];
-        topLeftMeters = _mbglMap->projectedMetersForLatLng(MGLLatLngFromLocationCoordinate2D(topCenter));
-        opposite = CGPointMake(0, size.height);
+        pointA = CGPointMake(size.width / 2., 0);
+        pointB = CGPointMake(0, size.height);
     }
-    CLLocationCoordinate2D oppositeCoordinate = [self convertPoint:opposite toCoordinateFromView:self];
-    mbgl::ProjectedMeters oppositeMeters = _mbglMap->projectedMetersForLatLng(MGLLatLngFromLocationCoordinate2D(oppositeCoordinate));
-    CLLocationDistance distance = std::hypot(oppositeMeters.easting - topLeftMeters.easting,
-                                             oppositeMeters.northing - topLeftMeters.northing);
+    CLLocationCoordinate2D coordinateA = [self convertPoint:pointA toCoordinateFromView:self];
+    mbgl::ProjectedMeters metersA = _mbglMap->projectedMetersForLatLng(MGLLatLngFromLocationCoordinate2D(coordinateA));
+    CLLocationCoordinate2D coordinateB = [self convertPoint:pointB toCoordinateFromView:self];
+    mbgl::ProjectedMeters metersB = _mbglMap->projectedMetersForLatLng(MGLLatLngFromLocationCoordinate2D(coordinateB));
+    CLLocationDistance distance = std::hypot(metersB.easting - metersA.easting,
+                                             metersB.northing - metersA.northing);
     CLLocationDistance altitude = distance / std::tan(MGLAngularFieldOfView / 2.) * 0.5;
     
     CGFloat pitch = MGLDegreesFromRadians(_mbglMap->getPitch());
@@ -1866,14 +1859,7 @@ mbgl::LatLngBounds MGLLatLngBoundsFromCoordinateBounds(MGLCoordinateBounds coord
     if (duration)
     {
         options.duration = secondsAsDuration(duration);
-        if ( ! function)
-        {
-            function = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionDefault];
-        }
-        float p1[2], p2[2];
-        [function getControlPointAtIndex:0 values:p1];
-        [function getControlPointAtIndex:1 values:p2];
-        options.easing = { p1[0], p1[1], p2[0], p2[1] };
+        options.easing = MGLUnitBezierForMediaTimingFunction(function);
     }
     _mbglMap->easeTo(options);
 }
