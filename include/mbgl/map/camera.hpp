@@ -4,8 +4,7 @@
 #include <mbgl/util/geo.hpp>
 #include <mbgl/util/optional.hpp>
 #include <mbgl/util/chrono.hpp>
-
-#include <functional>
+#include <mbgl/util/unitbezier.hpp>
 
 namespace mbgl {
 
@@ -15,7 +14,7 @@ struct CameraOptions {
     mapbox::util::optional<double> angle;
     mapbox::util::optional<double> pitch;
     mapbox::util::optional<Duration> duration;
-    mapbox::util::optional<std::function<double(double)> > easing;
+    mapbox::util::optional<mbgl::util::UnitBezier> easing;
 };
 
 }

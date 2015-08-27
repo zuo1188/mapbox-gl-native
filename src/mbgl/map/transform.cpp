@@ -239,7 +239,7 @@ void Transform::_easeTo(CameraOptions options, const double new_scale, const dou
 
         startTransition(
             [=](double t) {
-                util::UnitBezier ease(0, 0, 0.25, 1);
+                util::UnitBezier ease = options.easing ? *options.easing : util::UnitBezier(0, 0, 0.25, 1);
                 return ease.solve(t, 0.001);
             },
             [=](double t) {

@@ -1822,6 +1822,11 @@ mbgl::LatLngBounds MGLLatLngBoundsFromCoordinateBounds(MGLCoordinateBounds coord
 
 - (void)setCamera:(MGLMapCamera *)camera animated:(BOOL)animated
 {
+    [self setCamera:camera withDuration:animated ? MGLAnimationDuration : 0 animationTimingFunction:nil];
+}
+
+- (void)setCamera:(MGLMapCamera *)camera withDuration:(NSTimeInterval)duration animationTimingFunction:(CAMediaTimingFunction *)function
+{
     CGSize size = self.bounds.size;
     mbgl::ProjectedMeters centerMeters = _mbglMap->projectedMetersForLatLng(MGLLatLngFromLocationCoordinate2D(camera.centerCoordinate));
     CLLocationDistance distance = camera.altitude * std::tan(MGLAngularFieldOfView / 2.);
@@ -1858,9 +1863,17 @@ mbgl::LatLngBounds MGLLatLngBoundsFromCoordinateBounds(MGLCoordinateBounds coord
     {
         options.pitch = MGLRadiansFromDegrees(camera.pitch);
     }
-    if (animated)
+    if (duration)
     {
-        options.duration = secondsAsDuration(MGLAnimationDuration);
+        options.duration = secondsAsDuration(duration);
+        if ( ! function)
+        {
+            function = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionDefault];
+        }
+        float p1[2], p2[2];
+        [function getControlPointAtIndex:0 values:p1];
+        [function getControlPointAtIndex:1 values:p2];
+        options.easing = { p1[0], p1[1], p2[0], p2[1] };
     }
     _mbglMap->easeTo(options);
 }
