@@ -1753,31 +1753,6 @@ mbgl::LatLngBounds MGLLatLngBoundsFromCoordinateBounds(MGLCoordinateBounds coord
     return [NSSet setWithObject:@"camera"];
 }
 
-- (CGFloat)pitch
-{
-    return _mbglMap->getPitch();
-}
-
-- (void)setPitch:(CGFloat)pitch
-{
-    [self setPitch:pitch animated:NO];
-}
-
-- (void)setPitch:(CGFloat)pitch animated:(BOOL)animated
-{
-    // constrain pitch to between 0º and 60º
-    //
-    CGFloat duration = animated ? MGLAnimationDuration : 0;
-    _mbglMap->setPitch(mbgl::util::clamp(pitch, MGLMinimumPitch, MGLMaximumPitch), secondsAsDuration(duration));
-    
-    //[self notifyMapChange:(mbgl::MapChangeRegionDidChange)];
-}
-
-- (void)resetPitch
-{
-    [self setPitch:0 animated:YES];
-}
-
 - (MGLMapCamera *)camera
 {
     CGSize size = self.bounds.size;

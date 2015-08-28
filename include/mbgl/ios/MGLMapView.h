@@ -184,21 +184,6 @@ IB_DESIGNABLE
 /** Resets the map rotation to a northern heading. */
 - (IBAction)resetNorth;
 
-/** The pitch of the map (measured in degrees).
- *
- *   The default value `0` shows a completely flat map. Maximum value is `60`. */
-@property (nonatomic) CGFloat pitch;
-
-/** Changes the pitch of the map.
-*   @param pitch The pitch of the map (measured in degrees) relative to top-down.
-*   @param animated Specify `YES` if you want the map view to animate the change to the new pitch or `NO` if you want the map to display the new pitch immediately.
-*
-*   Changing the pitch tilts the map without changing the current center coordinate or zoom level. */
-- (void)setPitch:(CGFloat)pitch animated:(BOOL)animated;
-
-/** Resets the map pitch to head-on. */
-- (IBAction)resetPitch;
-
 /** A camera representing the current viewpoint of the map. */
 @property (nonatomic, copy) MGLMapCamera *camera;
 
