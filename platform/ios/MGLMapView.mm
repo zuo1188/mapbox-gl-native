@@ -1780,7 +1780,7 @@ mbgl::LatLngBounds MGLLatLngBoundsFromCoordinateBounds(MGLCoordinateBounds coord
                                              metersB.northing - metersA.northing);
     CLLocationDistance altitude = distance / std::tan(MGLAngularFieldOfView / 2.) * 0.5;
     
-    CGFloat pitch = MGLDegreesFromRadians(_mbglMap->getPitch());
+    CGFloat pitch = _mbglMap->getPitch();
     
     return [MGLMapCamera cameraLookingAtCenterCoordinate:self.centerCoordinate
                                             fromDistance:altitude
@@ -1834,7 +1834,8 @@ mbgl::LatLngBounds MGLLatLngBoundsFromCoordinateBounds(MGLCoordinateBounds coord
     }
     if (camera.pitch >= 0)
     {
-        options.pitch = MGLRadiansFromDegrees(camera.pitch);
+        options.pitch = mbgl::util::clamp(MGLRadiansFromDegrees(camera.pitch),
+                                          MGLMinimumPitch, MGLMaximumPitch);
     }
     if (duration > 0)
     {
