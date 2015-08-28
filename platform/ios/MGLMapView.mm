@@ -1753,6 +1753,11 @@ mbgl::LatLngBounds MGLLatLngBoundsFromCoordinateBounds(MGLCoordinateBounds coord
     return [NSSet setWithObject:@"camera"];
 }
 
++ (NS_SET_OF(NSString *) *)keyPathsForValuesAffectingCamera
+{
+    return [NSSet setWithObjects:@"longitude", @"latitude", @"centerCoordinate", @"zoomLevel", @"direction", nil];
+}
+
 - (MGLMapCamera *)camera
 {
     CGSize size = self.bounds.size;
@@ -1781,11 +1786,6 @@ mbgl::LatLngBounds MGLLatLngBoundsFromCoordinateBounds(MGLCoordinateBounds coord
                                             fromDistance:altitude
                                                    pitch:pitch
                                                  heading:self.direction];
-}
-
-+ (NS_SET_OF(NSString *) *)keyPathsForValuesAffectingCamera
-{
-    return [NSSet setWithObjects:@"longitude", @"latitude", @"centerCoordinate", @"zoomLevel", @"direction", @"pitch", nil];
 }
 
 - (void)setCamera:(MGLMapCamera *)camera
