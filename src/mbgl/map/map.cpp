@@ -136,9 +136,7 @@ void Map::moveBy(double dx, double dy, const Duration& duration) {
 }
 
 void Map::setLatLng(LatLng latLng, const Duration& duration) {
-    CameraOptions options;
-    options.duration = duration;
-    transform->setLatLng(latLng, options);
+    transform->setLatLng(latLng, duration);
     update(Update::Repaint);
 }
 
@@ -182,9 +180,7 @@ double Map::getZoom() const {
 }
 
 void Map::setLatLngZoom(LatLng latLng, double zoom, const Duration& duration) {
-    CameraOptions options;
-    options.duration = duration;
-    transform->setLatLngZoom(latLng, zoom, options);
+    transform->setLatLngZoom(latLng, zoom, duration);
     update(Update::Zoom);
 }
 
@@ -272,9 +268,7 @@ void Map::rotateBy(double sx, double sy, double ex, double ey, const Duration& d
 }
 
 void Map::setBearing(double degrees, const Duration& duration) {
-    CameraOptions options;
-    options.duration = duration;
-    transform->setAngle(-degrees * M_PI / 180, options);
+    transform->setAngle(-degrees * M_PI / 180, duration);
     update(Update::Repaint);
 }
 
@@ -288,9 +282,7 @@ double Map::getBearing() const {
 }
 
 void Map::resetNorth() {
-    CameraOptions options;
-    options.duration = std::chrono::milliseconds(500);
-    transform->setAngle(0, options);
+    transform->setAngle(0, std::chrono::milliseconds(500));
     update(Update::Repaint);
 }
 
@@ -298,9 +290,7 @@ void Map::resetNorth() {
 #pragma mark - Pitch
 
 void Map::setPitch(double pitch, const Duration& duration) {
-    CameraOptions options;
-    options.duration = duration;
-    transform->setPitch(util::clamp(pitch, 0., 90.) * M_PI / 180, options);
+    transform->setPitch(util::clamp(pitch, 0., 90.) * M_PI / 180, duration);
     update(Update::Repaint);
 }
 

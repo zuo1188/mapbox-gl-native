@@ -103,14 +103,18 @@ void Transform::_moveBy(const double dx, const double dy, const Duration& durati
     _easeTo(options, state.scale, state.angle, x, y);
 }
 
-void Transform::setLatLng(const LatLng latLng, CameraOptions options) {
+void Transform::setLatLng(const LatLng latLng, const Duration& duration) {
+    CameraOptions options;
     options.center = latLng;
+    options.duration = duration;
     easeTo(options);
 }
 
-void Transform::setLatLngZoom(const LatLng latLng, const double zoom, CameraOptions options) {
+void Transform::setLatLngZoom(const LatLng latLng, const double zoom, const Duration& duration) {
+    CameraOptions options;
     options.center = latLng;
     options.zoom = zoom;
+    options.duration = duration;
     easeTo(options);
 }
 
@@ -295,17 +299,15 @@ void Transform::rotateBy(const double start_x, const double start_y, const doubl
 
     const double ang = state.angle + util::angle_between(first_x, first_y, second_x, second_y);
 
-    CameraOptions options;
-    options.duration = duration;
-    _setAngle(ang, options);
+    _setAngle(ang, duration);
 }
 
-void Transform::setAngle(const double new_angle, CameraOptions options) {
+void Transform::setAngle(const double new_angle, const Duration& duration) {
     if (std::isnan(new_angle)) {
         return;
     }
 
-    _setAngle(new_angle, options);
+    _setAngle(new_angle, duration);
 }
 
 void Transform::setAngle(const double new_angle, const double cx, const double cy) {
@@ -321,16 +323,17 @@ void Transform::setAngle(const double new_angle, const double cx, const double c
         _moveBy(dx, dy, Duration::zero());
     }
 
-    CameraOptions options;
-    _setAngle(new_angle, options);
+    _setAngle(new_angle);
 
     if (cx >= 0 && cy >= 0) {
         _moveBy(-dx, -dy, Duration::zero());
     }
 }
 
-void Transform::_setAngle(double new_angle, CameraOptions options) {
+void Transform::_setAngle(double new_angle, const Duration& duration) {
+    CameraOptions options;
     options.angle = new_angle;
+    options.duration = duration;
     easeTo(options);
 }
 
@@ -340,8 +343,10 @@ double Transform::getAngle() const {
 
 #pragma mark - Pitch
 
-void Transform::setPitch(double pitch, CameraOptions options) {
+void Transform::setPitch(double pitch, const Duration& duration) {
+    CameraOptions options;
     options.pitch = pitch;
+    options.duration = duration;
     easeTo(options);
 }
 
