@@ -199,9 +199,19 @@ IB_DESIGNABLE
 /** Resets the map pitch to head-on. */
 - (IBAction)resetPitch;
 
+/** A camera representing the current viewpoint of the map. */
 @property (nonatomic, copy) MGLMapCamera *camera;
 
+/** Moves the viewpoint to a different location with respect to the map with an optional transition animation.
+*   @param camera The new viewpoint.
+*   @param animated Specify `YES` if you want the map view to animate the change to the new viewpoint or `NO` if you want the map to display the new viewpoint immediately. */
 - (void)setCamera:(MGLMapCamera *)camera animated:(BOOL)animated;
+
+/** Moves the viewpoint to a different location with respect to the map with an optional transition duration and timing function.
+*   @param camera The new viewpoint.
+*   @param duration The amount of time, measured in seconds, that the transition animation should take. Specify `0` to jump to the new viewpoint instantaneously.
+*   @param function A timing function used for the animation. Set this parameter to `nil` for a transition that matches most system animations. If the duration is `0`, this parameter is ignored. */
+- (void)setCamera:(MGLMapCamera *)camera withDuration:(NSTimeInterval)duration animationTimingFunction:(nullable CAMediaTimingFunction *)function;
 
 #pragma mark - Converting Map Coordinates
 
