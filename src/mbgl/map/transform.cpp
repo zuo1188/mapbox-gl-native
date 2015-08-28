@@ -60,7 +60,7 @@ void Transform::jumpTo(const CameraOptions options) {
     easeTo(jumpOptions);
 }
 
-void Transform::easeTo(const CameraOptions options) {
+void Transform::easeTo(CameraOptions options) {
     LatLng latLng = options.center ? *options.center : getLatLng();
     double zoom = options.zoom ? *options.zoom : getZoom();
     double angle = options.angle ? *options.angle : getAngle();
@@ -80,6 +80,9 @@ void Transform::easeTo(const CameraOptions options) {
     double xn = -latLng.longitude * state.Bc;
     double yn = 0.5 * state.Cc * std::log((1 + f) / (1 - f));
     
+    options.center.reset();
+    options.zoom.reset();
+    options.angle.reset();
     _easeTo(options, new_scale, angle, xn, yn);
 }
 
