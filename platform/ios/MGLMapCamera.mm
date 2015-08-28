@@ -66,11 +66,11 @@
 {
     if (self = [super init])
     {
-        _centerCoordinate = CLLocationCoordinate2DMake([[coder decodeObjectForKey:@"centerLatitude"] doubleValue],
-                                                       [[coder decodeObjectForKey:@"centerLongitude"] doubleValue]);
-        _altitude = [[coder decodeObjectForKey:@"altitude"] doubleValue];
-        _pitch = [[coder decodeObjectForKey:@"pitch"] doubleValue];
-        _heading = [[coder decodeObjectForKey:@"heading"] doubleValue];
+        _centerCoordinate = CLLocationCoordinate2DMake([coder decodeDoubleForKey:@"centerLatitude"],
+                                                       [coder decodeDoubleForKey:@"centerLongitude"]);
+        _altitude = [coder decodeDoubleForKey:@"altitude"];
+        _pitch = [coder decodeDoubleForKey:@"pitch"];
+        _heading = [coder decodeDoubleForKey:@"heading"];
     }
     return self;
 }
