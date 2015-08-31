@@ -1776,9 +1776,16 @@ mbgl::LatLngBounds MGLLatLngBoundsFromCoordinateBounds(MGLCoordinateBounds coord
     mbgl::ProjectedMeters metersA = _mbglMap->projectedMetersForLatLng(MGLLatLngFromLocationCoordinate2D(coordinateA));
     CLLocationCoordinate2D coordinateB = [self convertPoint:pointB toCoordinateFromView:self];
     mbgl::ProjectedMeters metersB = _mbglMap->projectedMetersForLatLng(MGLLatLngFromLocationCoordinate2D(coordinateB));
-    CLLocationDistance distance = std::hypot(metersB.easting - metersA.easting,
-                                             metersB.northing - metersA.northing);
-    CLLocationDistance altitude = distance / std::tan(MGLAngularFieldOfView / 2.) * 0.5;
+    CLLocationDistance distance;
+    if (size.width > size.height) // landscape
+    {
+        distance = metersB.easting - metersA.easting;
+    }
+    else // portrait
+    {
+        distance = metersB.northing - metersA.northing;
+    }
+    CLLocationDistance altitude = distance / std::tan(MGLAngularFieldOfView / 2.) / 2;
     
     CGFloat pitch = _mbglMap->getPitch();
     
@@ -1802,27 +1809,27 @@ mbgl::LatLngBounds MGLLatLngBoundsFromCoordinateBounds(MGLCoordinateBounds coord
 {
     CGSize size = self.bounds.size;
     mbgl::ProjectedMeters centerMeters = _mbglMap->projectedMetersForLatLng(MGLLatLngFromLocationCoordinate2D(camera.centerCoordinate));
-    CLLocationDistance distance = camera.altitude * std::tan(MGLAngularFieldOfView / 2.);
+    CLLocationDistance distance = camera.altitude * std::tan(MGLAngularFieldOfView / 2.) * 2;
     mbgl::LatLng sw, ne;
     if (size.width > size.height) // landscape
     {
         sw = _mbglMap->latLngForProjectedMeters({
             centerMeters.northing,
-            centerMeters.easting - distance,
+            centerMeters.easting - distance / 2,
         });
         ne = _mbglMap->latLngForProjectedMeters({
             centerMeters.northing,
-            centerMeters.easting + distance,
+            centerMeters.easting + distance / 2,
         });
     }
     else // portrait
     {
         sw = _mbglMap->latLngForProjectedMeters({
-            centerMeters.northing - distance,
+            centerMeters.northing - distance / 2,
             centerMeters.easting,
         });
         ne = _mbglMap->latLngForProjectedMeters({
-            centerMeters.northing + distance,
+            centerMeters.northing + distance / 2,
             centerMeters.easting,
         });
     }
