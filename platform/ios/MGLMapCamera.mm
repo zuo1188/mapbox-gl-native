@@ -26,8 +26,8 @@
     CLLocationDirection heading = std::atan((centerMeters.northing - eyeMeters.northing) /
                                             (centerMeters.easting - eyeMeters.easting));
     
-    double groundDistance = std::sqrt(std::pow(centerMeters.northing - eyeMeters.northing, 2) +
-                                      std::pow(centerMeters.easting - eyeMeters.easting, 2));
+    double groundDistance = std::hypot(centerMeters.northing - eyeMeters.northing,
+                                       centerMeters.easting - eyeMeters.easting);
     CGFloat pitch = std::atan(eyeAltitude / groundDistance);
     
     return [[self alloc] initWithCenterCoordinate:centerCoordinate
