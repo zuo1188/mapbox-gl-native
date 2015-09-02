@@ -1762,6 +1762,7 @@ mbgl::LatLngBounds MGLLatLngBoundsFromCoordinateBounds(MGLCoordinateBounds coord
 {
     CGRect frame = self.frame;
     CGPoint edgePoint;
+    // Constrain by the shorter of the two axes.
     if (frame.size.width > frame.size.height) // landscape
     {
         edgePoint = CGPointMake(0, frame.size.height / 2.);
@@ -1772,11 +1773,31 @@ mbgl::LatLngBounds MGLLatLngBoundsFromCoordinateBounds(MGLCoordinateBounds coord
     }
     CLLocationCoordinate2D edgeCoordinate = [self convertPoint:edgePoint toCoordinateFromView:self];
     mbgl::ProjectedMeters edgeMeters = _mbglMap->projectedMetersForLatLng(MGLLatLngFromLocationCoordinate2D(edgeCoordinate));
+    
+    // Because we constrain the zoom level vertically in portrait orientation,
+    // the visible medial span is affected by pitch: the distance from the
+    // center point to the near edge is less than than distance from the center
+    // point to the far edge. Average the two distances.
+    mbgl::ProjectedMeters nearEdgeMeters;
+    if (frame.size.width > frame.size.height)
+    {
+        nearEdgeMeters = edgeMeters;
+    }
+    else
+    {
+        CGPoint nearEdgePoint = CGPointMake(frame.size.width / 2., frame.size.height);
+        CLLocationCoordinate2D nearEdgeCoordinate = [self convertPoint:nearEdgePoint toCoordinateFromView:self];
+        nearEdgeMeters = _mbglMap->projectedMetersForLatLng(MGLLatLngFromLocationCoordinate2D(nearEdgeCoordinate));
+    }
+    
+    // The opposite side is the distance between the center and one edge.
     CLLocationCoordinate2D centerCoordinate = self.centerCoordinate;
     mbgl::ProjectedMeters centerMeters = _mbglMap->projectedMetersForLatLng(MGLLatLngFromLocationCoordinate2D(centerCoordinate));
     CLLocationDistance centerToEdge = std::hypot(centerMeters.easting - edgeMeters.easting,
                                                  centerMeters.northing - edgeMeters.northing);
-    CLLocationDistance altitude = centerToEdge / std::tan(MGLAngularFieldOfView / 2.);
+    CLLocationDistance centerToNearEdge = std::hypot(centerMeters.easting - nearEdgeMeters.easting,
+                                                     centerMeters.northing - nearEdgeMeters.northing);
+    CLLocationDistance altitude = (centerToEdge + centerToNearEdge) / 2 / std::tan(MGLAngularFieldOfView / 2.);
     
     CGFloat pitch = _mbglMap->getPitch();
     
@@ -1798,8 +1819,9 @@ mbgl::LatLngBounds MGLLatLngBoundsFromCoordinateBounds(MGLCoordinateBounds coord
 
 - (void)setCamera:(MGLMapCamera *)camera withDuration:(NSTimeInterval)duration animationTimingFunction:(CAMediaTimingFunction *)function
 {
-    CGRect frame = self.frame;
-    mbgl::ProjectedMeters centerMeters = _mbglMap->projectedMetersForLatLng(MGLLatLngFromLocationCoordinate2D(camera.centerCoordinate));
+    // The opposite side is the distance between the center and one edge.
+    mbgl::LatLng centerLatLng = MGLLatLngFromLocationCoordinate2D(camera.centerCoordinate);
+    mbgl::ProjectedMeters centerMeters = _mbglMap->projectedMetersForLatLng(centerLatLng);
     CLLocationDistance centerToEdge = camera.altitude * std::tan(MGLAngularFieldOfView / 2.);
     
     double angle = -1;
@@ -1807,7 +1829,15 @@ mbgl::LatLngBounds MGLLatLngBoundsFromCoordinateBounds(MGLCoordinateBounds coord
     {
         angle = MGLRadiansFromDegrees(-camera.heading);
     }
+    double pitch = -1;
+    if (camera.pitch >= 0)
+    {
+        pitch = MGLRadiansFromDegrees(mbgl::util::clamp(camera.pitch, MGLMinimumPitch, MGLMaximumPitch));
+    }
     
+    // Make a visible bounds that extends in the constrained direction (the
+    // shorter of the two axes).
+    CGRect frame = self.frame;
     mbgl::LatLng sw, ne;
     if (frame.size.width > frame.size.height) // landscape
     {
@@ -1823,24 +1853,27 @@ mbgl::LatLngBounds MGLLatLngBoundsFromCoordinateBounds(MGLCoordinateBounds coord
     else // portrait
     {
         sw = _mbglMap->latLngForProjectedMeters({
-            centerMeters.northing - centerToEdge * std::cos(angle),
-            centerMeters.easting - centerToEdge * std::sin(angle),
+            centerMeters.northing - centerToEdge * std::cos(angle) + centerToEdge * std::cos(angle) * std::sin(pitch) / 2,
+            centerMeters.easting - centerToEdge * std::sin(angle) + centerToEdge * std::sin(angle) * std::sin(pitch) / 2,
         });
         ne = _mbglMap->latLngForProjectedMeters({
-            centerMeters.northing + centerToEdge * std::cos(angle),
-            centerMeters.easting + centerToEdge * std::sin(angle),
+            centerMeters.northing + centerToEdge * std::cos(angle) - centerToEdge * std::cos(angle) * std::sin(pitch) / 2,
+            centerMeters.easting + centerToEdge * std::sin(angle) - centerToEdge * std::sin(angle) * std::sin(pitch) / 2,
         });
     }
+    
+    // Fit the viewport to the bounds. Correct the center in case pitch should
+    // cause the visual center to lie above the screen center.
     mbgl::CameraOptions options = _mbglMap->cameraForLatLngs({ sw, ne }, {});
+    options.center = centerLatLng;
     
     if (angle >= 0)
     {
         options.angle = angle;
     }
-    if (camera.pitch >= 0)
+    if (pitch >= 0)
     {
-        options.pitch = mbgl::util::clamp(MGLRadiansFromDegrees(camera.pitch),
-                                          MGLMinimumPitch, MGLMaximumPitch);
+        options.pitch = pitch;
     }
     if (duration > 0)
     {
