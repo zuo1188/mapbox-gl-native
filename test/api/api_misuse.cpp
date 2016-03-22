@@ -57,3 +57,15 @@ TEST(API, RenderWithoutStyle) {
         EXPECT_TRUE(false) << "Unhandled exception.";
     }
 }
+
+TEST(API, SetClassesWithoutStyle) {
+    auto display = std::make_shared<mbgl::HeadlessDisplay>();
+    HeadlessView view(display, 1);
+    view.resize(128, 512);
+    OnlineFileSource fileSource;
+
+    Map map(view, fileSource, MapMode::Still);
+
+    std::vector<std::string> classes{ "foo", "bar" };
+    map.setClasses(classes);
+}
