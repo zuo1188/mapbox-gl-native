@@ -4,6 +4,8 @@
 *.gcda
 *~
 offline.db
+cache.sqlite
+out.png
 /platform/node/test/actual
 /platform/node/test/diff
 /mason_packages

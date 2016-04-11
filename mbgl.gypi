@@ -172,6 +172,7 @@
           '<@(geojsonvt_cflags)',
           '<@(rapidjson_cflags)',
           '<@(variant_cflags)',
+          '<@(harfbuzz_cflags)',
         ],
         'cflags': [
           '<@(opengl_cflags)',
@@ -183,6 +184,7 @@
         ],
         'libraries': [
           '<@(geojsonvt_static_libs)',
+          '<@(harfbuzz_static_libs)',
         ],
       },
 
