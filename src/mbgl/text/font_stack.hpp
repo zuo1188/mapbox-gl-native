@@ -10,7 +10,7 @@ class FontStack {
 public:
     void insert(uint32_t id, const SDFGlyph &glyph);
     const std::map<uint32_t, SDFGlyph> &getSDFs() const;
-    const Shaping getShaping(const std::u32string &string, const std::string &font, float maxWidth, float lineHeight,
+    const Shaping getShaping(const std::u32string &string, float maxWidth, float lineHeight,
                              float horizontalAlign, float verticalAlign, float justify,
                              float spacing, const vec2<float> &translate) const;
     void lineWrap(Shaping &shaping, float lineHeight, float maxWidth, float horizontalAlign,

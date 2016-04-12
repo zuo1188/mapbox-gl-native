@@ -238,7 +238,6 @@ void SymbolBucket::addFeatures(uintptr_t tileUID,
         if (feature.label.length()) {
             shapedText = fontStack->getShaping(
                 /* string */ feature.label,
-                /* fontstack: string */ layout.text.font,
                 /* maxWidth: ems */ layout.placement != PlacementType::Line ?
                     layout.text.maxWidth * 24 : 0,
                 /* lineHeight: ems */ layout.text.lineHeight * 24,
