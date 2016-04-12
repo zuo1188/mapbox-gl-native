@@ -4,7 +4,7 @@
 #include <mbgl/util/math.hpp>
 
 #include <harfbuzz/hb.h>
-// #include <harfbuzz/hb-ft.h>
+#include <harfbuzz/hb-ft.h>
 #include <iostream>
 #include <codecvt>
 
@@ -34,7 +34,8 @@ const std::map<uint32_t, SDFGlyph> &FontStack::getSDFs() const {
     return sdfs;
 }
 
-const Shaping FontStack::getShaping(const std::u32string &string, const float maxWidth,
+const Shaping FontStack::getShaping(const std::u32string &string, 
+                                    const std::string &font, const float maxWidth,
                                     const float lineHeight, const float horizontalAlign,
                                     const float verticalAlign, const float justify,
                                     const float spacing, const vec2<float> &translate) const {
@@ -53,6 +54,7 @@ const Shaping FontStack::getShaping(const std::u32string &string, const float ma
 
     std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> cv;
     std::cout << cv.to_bytes(string) << std::endl;
+    std::cout << font << std::endl;
 
     /*
     mapnik::value_unicode_string const& text = itemizer.text();

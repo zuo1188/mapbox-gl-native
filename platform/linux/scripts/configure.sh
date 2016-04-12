@@ -17,6 +17,7 @@ GTEST_VERSION=1.7.0
 PIXELMATCH_VERSION=0.9.0
 WEBP_VERSION=0.5.0
 HARFBUZZ_VERSION=1.2.1
+FREETYPE_VERSION=2.6
 
 function print_opengl_flags {
     CONFIG+="    'opengl_cflags%': $(quote_flags $(pkg-config gl x11 --cflags)),"$LN
