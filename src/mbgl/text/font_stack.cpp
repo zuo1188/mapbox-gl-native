@@ -4,10 +4,6 @@
 #include <mbgl/util/math.hpp>
 
 #include <mbgl/text/font.hpp>
-#include <harfbuzz/hb.h>
-#include <harfbuzz/hb-ft.h>
-#include <iostream>
-#include <codecvt>
 
 namespace mbgl {
 
@@ -35,8 +31,7 @@ const std::map<uint32_t, SDFGlyph> &FontStack::getSDFs() const {
     return sdfs;
 }
 
-const Shaping FontStack::getShaping(const std::u32string &string, 
-                                    const float maxWidth,
+const Shaping FontStack::getShaping(const std::u32string &string, const float maxWidth,
                                     const float lineHeight, const float horizontalAlign,
                                     const float verticalAlign, const float justify,
                                     const float spacing, const vec2<float> &translate) const {
