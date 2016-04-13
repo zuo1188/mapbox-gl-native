@@ -35,26 +35,31 @@ const Shaping FontStack::getShaping(const std::u32string &string, const float ma
                                     const float lineHeight, const float horizontalAlign,
                                     const float verticalAlign, const float justify,
                                     const float spacing, const vec2<float> &translate) const {
+    /*
     Shaping shaping(translate.x * 24, translate.y * 24, string);
 
-    // the y offset *should* be part of the font metadata
+    // TODO: the y offset *should* be part of the font metadata
     const int32_t yOffset = -17;
 
     float x = 0;
     const float y = yOffset;
+    */
 
     // Create new Harfbuzz font object
     Font font("/Library/Fonts/Arial Unicode.ttf");
-    font.shape(string);
+    Shaping shaping = font.shape(string, spacing, translate);
 
+    /*
     // Loop through all characters of this label and shape.
     for (uint32_t chr : string) {
         auto it = sdfs.find(chr);
         if (it != sdfs.end()) {
+            // TODO: change this instead of assuming they stay in order
             shaping.positionedGlyphs.emplace_back(chr, x, y);
             x += it->second.metrics.advance + spacing;
         }
     }
+    */
 
     if (shaping.positionedGlyphs.empty())
         return shaping;

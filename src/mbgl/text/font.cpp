@@ -5,7 +5,6 @@
 #include <fstream>
 #include <iostream>
 
-#include <cstdint>
 #include <codecvt>
 
 namespace mbgl {
@@ -48,35 +47,38 @@ void Font::load() {
     hb_blob_destroy(blob);
     font_ = hb_font_create(face);
 
-#if 1
     // TODO: Font size
-    unsigned int upem = hb_face_get_upem(face);
-    hb_font_set_scale(font_, upem, upem);
-#endif
+    upem_ = hb_face_get_upem(face);
+    hb_font_set_scale(font_, upem_, upem_);
+
     hb_face_destroy(face);
     hb_ft_font_set_funcs(font_);
 }
 
-void Font::shape(const std::u32string &text)
-{
-    if (!font_) return;
+Shaping Font::shape(const std::u32string &text, const float spacing, const vec2<float> &translate) {
+    Shaping shaping(translate.x * 24, translate.y * 24, text);
 
+    // TODO: the y offset *should* be part of the font metadata
+    // const int32_t yOffset = -17;
+
+    if (!font_) return shaping;
+
+    /*
     std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> cv;
     std::cout << cv.to_bytes(text) << std::endl;
+    */
 
     hb_buffer_reset(buffer_);
-
     hb_buffer_add_utf32(buffer_, reinterpret_cast<const uint32_t*>(text.c_str()), text.length(), 0, text.length());
 
     hb_buffer_set_direction(buffer_, HB_DIRECTION_RTL);
-    hb_buffer_set_script(buffer_, HB_SCRIPT_ARABIC);
-    hb_buffer_set_language(buffer_, hb_language_from_string("ar", -1));
+    // hb_buffer_set_direction(buffer, hb_direction_from_string (direction, -1));
 
-#if 0
-    hb_buffer_set_direction(buffer, hb_direction_from_string (direction, -1));
-    hb_buffer_set_script(buffer, hb_script_from_string (script, -1));
-    hb_buffer_set_language(buffer, hb_language_from_string (language, -1));
-#endif
+    hb_buffer_set_script(buffer_, HB_SCRIPT_ARABIC);
+    // hb_buffer_set_script(buffer, hb_script_from_string (script, -1));
+
+    hb_buffer_set_language(buffer_, hb_language_from_string("ar", -1));
+    // hb_buffer_set_language(buffer, hb_language_from_string (language, -1));
 
     hb_shape(font_, buffer_, 0 /*features*/, 0 /*num_features*/);
 
@@ -84,7 +86,14 @@ void Font::shape(const std::u32string &text)
     hb_glyph_info_t *hb_glyph = hb_buffer_get_glyph_infos(buffer_, NULL);
     hb_glyph_position_t *hb_position = hb_buffer_get_glyph_positions(buffer_, NULL);
 
+    // Loop through all characters of this label and shape.
     for (int i = 0; i < num_glyphs; i++) {
+        uint32_t codepoint = hb_glyph[i].codepoint;
+        shaping.positionedGlyphs.emplace_back(codepoint,
+            hb_position[i].x_advance + spacing,
+            hb_position[i].y_advance);
+
+        /*
         std::cout << "glyph codepoint:" << hb_glyph[i].codepoint <<
                      " cluster: " << hb_glyph[i].cluster <<
                      " mask: " << hb_glyph[i].mask <<
@@ -93,7 +102,10 @@ void Font::shape(const std::u32string &text)
                      // " x_offset: "<< hb_position[i].x_offset <<
                      // " y_offset: "<< hb_position[i].y_offset << "\n";
         // std::cout << "glyph:" << hb_glyph->codepoint << "\n";
+        */
     }
+
+    return shaping;
 
     /*
     auto hb_buffer_deleter = [](hb_buffer_t * buffer) { hb_buffer_destroy(buffer);};
