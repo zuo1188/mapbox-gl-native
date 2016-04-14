@@ -53,7 +53,7 @@ Rect<uint16_t> GlyphAtlas::addGlyph(uintptr_t tileUID,
                                     const std::string& stackName,
                                     const SDFGlyph& glyph)
 {
-    // Use constant value for now.
+    // TODO: Use constant value for now.
     const uint8_t buffer = 3;
 
     std::map<uint32_t, GlyphValue>& face = index[stackName];
