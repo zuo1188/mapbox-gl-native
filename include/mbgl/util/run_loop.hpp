@@ -45,9 +45,15 @@ public:
     void addWatch(int fd, Event, std::function<void(int, Event)>&& callback);
     void removeWatch(int fd);
 
+    template<class...> struct disjunction : std::false_type { };
+    template<class B1> struct disjunction<B1> : B1 { };
+    template<class B1, class... Bn>
+    struct disjunction<B1, Bn...> : std::conditional_t<B1::value != false, B1, disjunction<Bn...>>  { };
+
     // Invoke fn(args...) on this RunLoop.
     template <class Fn, class... Args>
-    void invoke(Fn&& fn, Args&&... args) {
+    auto invoke(Fn&& fn, Args&&... args)
+        -> std::enable_if_t<!disjunction<std::is_lvalue_reference<Fn>, std::is_lvalue_reference<Args>...>::value, void> {
         auto tuple = std::make_tuple(std::move(args)...);
         auto task = std::make_shared<Invoker<Fn, decltype(tuple)>>(
             std::move(fn),
@@ -58,8 +64,9 @@ public:
 
     // Post the cancellable work fn(args...) to this RunLoop.
     template <class Fn, class... Args>
-    std::unique_ptr<AsyncRequest>
-    invokeCancellable(Fn&& fn, Args&&... args) {
+    auto
+    invokeCancellable(Fn&& fn, Args&&... args)
+        -> std::enable_if_t<!disjunction<std::is_lvalue_reference<Fn>, std::is_lvalue_reference<Args>...>::value, std::unique_ptr<AsyncRequest>> {
         auto flag = std::make_shared<std::atomic<bool>>();
         *flag = false;
 
@@ -76,8 +83,9 @@ public:
 
     // Invoke fn(args...) on this RunLoop, then invoke callback(results...) on the current RunLoop.
     template <class Fn, class Cb, class... Args>
-    std::unique_ptr<AsyncRequest>
-    invokeWithCallback(Fn&& fn, Cb&& callback, Args&&... args) {
+    auto
+    invokeWithCallback(Fn&& fn, Cb&& callback, Args&&... args)
+        -> std::enable_if_t<!disjunction<std::is_lvalue_reference<Fn>, std::is_lvalue_reference<Args>...>::value, std::unique_ptr<AsyncRequest>> {
         auto flag = std::make_shared<std::atomic<bool>>();
         *flag = false;
 

@@ -73,8 +73,8 @@ Worker::parseRasterTile(std::unique_ptr<RasterBucket> bucket,
                         const std::shared_ptr<const std::string> data,
                         std::function<void(RasterTileParseResult)> callback) {
     current = (current + 1) % threads.size();
-    return threads[current]->invokeWithCallback(&Worker::Impl::parseRasterTile, callback, bucket,
-                                                data);
+    return threads[current]->invokeWithCallback(&Worker::Impl::parseRasterTile, std::move(callback),
+                                                std::move(bucket), std::move(data));
 }
 
 std::unique_ptr<AsyncRequest>
@@ -84,8 +84,8 @@ Worker::parseGeometryTile(TileWorker& worker,
                           PlacementConfig config,
                           std::function<void(TileParseResult)> callback) {
     current = (current + 1) % threads.size();
-    return threads[current]->invokeWithCallback(&Worker::Impl::parseGeometryTile, callback, &worker,
-                                                std::move(layers), std::move(tile), config);
+    return threads[current]->invokeWithCallback(&Worker::Impl::parseGeometryTile, std::move(callback),
+                                                &worker, std::move(layers), std::move(tile), std::move(config));
 }
 
 std::unique_ptr<AsyncRequest>
@@ -93,8 +93,8 @@ Worker::parsePendingGeometryTileLayers(TileWorker& worker,
                                        PlacementConfig config,
                                        std::function<void(TileParseResult)> callback) {
     current = (current + 1) % threads.size();
-    return threads[current]->invokeWithCallback(&Worker::Impl::parsePendingGeometryTileLayers,
-                                                callback, &worker, config);
+    return threads[current]->invokeWithCallback(&Worker::Impl::parsePendingGeometryTileLayers, std::move(callback),
+                                                &worker, std::move(config));
 }
 
 std::unique_ptr<AsyncRequest>
@@ -103,8 +103,8 @@ Worker::redoPlacement(TileWorker& worker,
                       PlacementConfig config,
                       std::function<void(std::unique_ptr<CollisionTile>)> callback) {
     current = (current + 1) % threads.size();
-    return threads[current]->invokeWithCallback(&Worker::Impl::redoPlacement, callback, &worker,
-                                                &buckets, config);
+    return threads[current]->invokeWithCallback(&Worker::Impl::redoPlacement, std::move(callback),
+                                                &worker, &buckets, std::move(config));
 }
 
 } // end namespace mbgl
