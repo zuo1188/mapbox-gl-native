@@ -88,11 +88,15 @@
         return;
     }
     
-    self.layer.transform = CATransform3DIdentity;
+    CATransform3D t = CATransform3DIdentity;
     MGLMapCamera *camera = self.mapView.camera;
-    if (self.flat)
+    if (camera.pitch >= 0 && (self.freeAxes & MGLAnnotationViewBillboardAxisX))
     {
-        self.layer.transform = CATransform3DRotate(self.layer.transform, MGLRadiansFromDegrees(camera.pitch), 1.0, 0, 0);
+        t = CATransform3DRotate(t, MGLRadiansFromDegrees(camera.pitch), 1.0, 0, 0);
+    }
+    if (camera.heading >= 0 && (self.freeAxes & MGLAnnotationViewBillboardAxisY))
+    {
+        t = CATransform3DRotate(t, MGLRadiansFromDegrees(-camera.heading), 0.0, 0.0, 1.0);
     }
     
     CGFloat superviewHeight = CGRectGetHeight(self.superview.frame);
@@ -117,8 +121,9 @@
         // reduction is then normalized for a scale of 1.0.
         CGFloat pitchAdjustedScale = 1.0 - maxScaleReduction * pitchIntensity;
         
-        self.layer.transform = CATransform3DScale(self.layer.transform, pitchAdjustedScale, pitchAdjustedScale, 1);
+        t = CATransform3DScale(t, pitchAdjustedScale, pitchAdjustedScale, 1);
     }
+    self.layer.transform = t;
 }
 
 #pragma mark - Draggable

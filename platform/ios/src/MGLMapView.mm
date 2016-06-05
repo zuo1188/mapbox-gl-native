@@ -4566,6 +4566,9 @@ mbgl::Duration MGLDurationInSeconds(NSTimeInterval duration)
     [CATransaction begin];
     [CATransaction setDisableActions:YES];
     
+    CLLocationDirection direction = self.direction;
+    CGFloat pitch = self.camera.pitch;
+    
     for (auto &pair : _annotationContextsByAnnotationTag)
     {
         CGRect viewPort = CGRectInset(self.bounds,
@@ -4588,6 +4591,7 @@ mbgl::Duration MGLDurationInSeconds(NSTimeInterval duration)
                 
                 annotationView.center = [self convertCoordinate:annotationContext.annotation.coordinate toPointToView:self];
                 annotationView.mapView = self;
+                
                 annotationContext.annotationView = annotationView;
             }
         }
