@@ -4,6 +4,7 @@
 #include <mbgl/style/sources/geojson_source_impl.hpp>
 #include <mbgl/style/layer_impl.hpp>
 #include <mbgl/style/layers/fill_layer.hpp>
+#include <mbgl/style/layers/extrusion_layer.hpp>
 #include <mbgl/style/layers/line_layer.hpp>
 #include <mbgl/style/layers/circle_layer.hpp>
 #include <mbgl/style/layers/symbol_layer.hpp>
@@ -237,6 +238,8 @@ void Parser::parseLayer(const std::string& id, const JSValue& value, std::unique
 
         if (type == "fill") {
             layer = std::make_unique<FillLayer>(id);
+        } else if (type == "extrusion") {
+            layer = std::make_unique<ExtrusionLayer>(id);
         } else if (type == "line") {
             layer = std::make_unique<LineLayer>(id);
         } else if (type == "circle") {

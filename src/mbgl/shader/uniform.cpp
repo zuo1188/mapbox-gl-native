@@ -49,6 +49,11 @@ void UniformMatrix<4>::bind(const std::array<GLfloat, 16>& t) {
     MBGL_CHECK_ERROR(glUniformMatrix4fv(location, 1, GL_FALSE, t.data()));
 }
 
+template <>
+void UniformVector<3>::bind(const std::array<GLfloat, 3>& t) {
+    MBGL_CHECK_ERROR(glUniform3fv(location, 1, t.data()));
+}
+
 // Add more as needed.
 
 } // namespace mbgl
