@@ -67,6 +67,7 @@ public:
 protected:
     enum class Type {
         Fill,
+        Extrusion,
         Line,
         Circle,
         Symbol,

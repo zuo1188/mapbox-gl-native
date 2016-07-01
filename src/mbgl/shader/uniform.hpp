@@ -57,4 +57,34 @@ private:
     GLint location;
 };
 
+template <size_t C>
+class UniformVector {
+public:
+    typedef std::array<float, C> T;
+
+    UniformVector(const GLchar* name, const Shader& shader) : current() {
+        location = MBGL_CHECK_ERROR(glGetUniformLocation(shader.getID(), name));
+    }
+
+    void operator=(const std::array<double, C>& t) {
+        bool dirty = false;
+        for (unsigned int i = 0; i < C; i++) {
+            if (current[i] != t[i]) {
+                current[i] = t[i];
+                dirty = true;
+            }
+        }
+        if (dirty) {
+            bind(current);
+        }
+    }
+    
+private:
+    void bind(const T&);
+    
+    T current;
+    GLint location;
+};
+
+
 } // namespace mbgl

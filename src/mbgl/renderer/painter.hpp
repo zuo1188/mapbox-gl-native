@@ -36,6 +36,7 @@ class Tile;
 
 class DebugBucket;
 class FillBucket;
+class ExtrusionBucket;
 class LineBucket;
 class CircleBucket;
 class SymbolBucket;
@@ -45,6 +46,9 @@ class SDFShader;
 class PlainShader;
 class OutlineShader;
 class OutlinePatternShader;
+class ExtrusionShader;
+class ExtrusionPatternShader;
+class ExtrusionTextureShader;
 class LineShader;
 class LinejoinShader;
 class LineSDFShader;
@@ -68,6 +72,7 @@ namespace style {
 class Style;
 class Source;
 class FillLayer;
+class ExtrusionLayer;
 class LineLayer;
 class CircleLayer;
 class SymbolLayer;
@@ -103,6 +108,7 @@ public:
 
     void renderDebugText(Tile&, const mat4&);
     void renderFill(FillBucket&, const style::FillLayer&, const UnwrappedTileID&, const mat4&);
+    void renderExtrusion(ExtrusionBucket&, const style::ExtrusionLayer&, const UnwrappedTileID&, const mat4&);
     void renderLine(LineBucket&, const style::LineLayer&, const UnwrappedTileID&, const mat4&);
     void renderCircle(CircleBucket&, const style::CircleLayer&, const UnwrappedTileID&, const mat4&);
     void renderSymbol(SymbolBucket&, const style::SymbolLayer&, const UnwrappedTileID&, const mat4&);
@@ -204,6 +210,9 @@ private:
     std::unique_ptr<PlainShader> plainShader;
     std::unique_ptr<OutlineShader> outlineShader;
     std::unique_ptr<OutlinePatternShader> outlinePatternShader;
+    std::unique_ptr<ExtrusionShader> extrusionShader;
+    std::unique_ptr<ExtrusionPatternShader> extrusionPatternShader;
+    std::unique_ptr<ExtrusionTextureShader> extrusionTextureShader;
     std::unique_ptr<LineShader> lineShader;
     std::unique_ptr<LineSDFShader> linesdfShader;
     std::unique_ptr<LinepatternShader> linepatternShader;
@@ -232,6 +241,7 @@ private:
     VertexArrayObject coveringRasterArray;
     VertexArrayObject backgroundPatternArray;
     VertexArrayObject backgroundArray;
+    VertexArrayObject extrusionTextureArray;
 
     // Set up the tile boundary lines we're using to draw the tile outlines.
     StaticVertexBuffer tileBorderBuffer = {

@@ -6,6 +6,7 @@
 #include <mbgl/style/layers/circle_layer.hpp>
 #include <mbgl/style/layers/raster_layer.hpp>
 #include <mbgl/style/layers/background_layer.hpp>
+#include <mbgl/style/layers/extrusion_layer.hpp>
 
 namespace node_mbgl {
 
@@ -55,6 +56,7 @@ inline PropertySetters makeLayoutPropertySetters() {
     result["text-allow-overlap"] = makePropertySetter(&SymbolLayer::setTextAllowOverlap);
     result["text-ignore-placement"] = makePropertySetter(&SymbolLayer::setTextIgnorePlacement);
     result["text-optional"] = makePropertySetter(&SymbolLayer::setTextOptional);
+
 
 
 
@@ -119,6 +121,18 @@ inline PropertySetters makePaintPropertySetters() {
     result["background-pattern"] = makePropertySetter(&BackgroundLayer::setBackgroundPattern);
     result["background-opacity"] = makePropertySetter(&BackgroundLayer::setBackgroundOpacity);
 
+    result["extrusion-antialias"] = makePropertySetter(&ExtrusionLayer::setExtrusionAntialias);
+    result["extrusion-opacity"] = makePropertySetter(&ExtrusionLayer::setExtrusionOpacity);
+    result["extrusion-layer-opacity"] = makePropertySetter(&ExtrusionLayer::setExtrusionLayerOpacity);
+    result["extrusion-height"] = makePropertySetter(&ExtrusionLayer::setExtrusionHeight);
+    result["extrusion-min-height"] = makePropertySetter(&ExtrusionLayer::setExtrusionMinHeight);
+    result["extrusion-color"] = makePropertySetter(&ExtrusionLayer::setExtrusionColor);
+    result["extrusion-shadow-color"] = makePropertySetter(&ExtrusionLayer::setExtrusionShadowColor);
+    result["extrusion-outline-color"] = makePropertySetter(&ExtrusionLayer::setExtrusionOutlineColor);
+    result["extrusion-translate"] = makePropertySetter(&ExtrusionLayer::setExtrusionTranslate);
+    result["extrusion-translate-anchor"] = makePropertySetter(&ExtrusionLayer::setExtrusionTranslateAnchor);
+    result["extrusion-pattern"] = makePropertySetter(&ExtrusionLayer::setExtrusionPattern);
+
     return result;
 }
 
@@ -139,6 +153,10 @@ inline bool setFilter(mbgl::style::Layer& layer, const mbgl::style::Filter& filt
     }
     if (layer.is<CircleLayer>()) {
         layer.as<CircleLayer>()->setFilter(filter);
+        return true;
+    }
+    if (layer.is<ExtrusionLayer>()) {
+        layer.as<ExtrusionLayer>()->setFilter(filter);
         return true;
     }
 

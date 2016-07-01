@@ -22,6 +22,9 @@
 #include <mbgl/shader/plain_shader.hpp>
 #include <mbgl/shader/outline_shader.hpp>
 #include <mbgl/shader/outlinepattern_shader.hpp>
+#include <mbgl/shader/extrusion_shader.hpp>
+#include <mbgl/shader/extrusion_pattern_shader.hpp>
+#include <mbgl/shader/extrusion_texture_shader.hpp>
 #include <mbgl/shader/line_shader.hpp>
 #include <mbgl/shader/linesdf_shader.hpp>
 #include <mbgl/shader/linepattern_shader.hpp>
@@ -59,6 +62,9 @@ Painter::Painter(const TransformState& state_,
     plainShader = std::make_unique<PlainShader>(store);
     outlineShader = std::make_unique<OutlineShader>(store);
     outlinePatternShader = std::make_unique<OutlinePatternShader>(store);
+    extrusionShader = std::make_unique<ExtrusionShader>(store);
+    extrusionPatternShader = std::make_unique<ExtrusionPatternShader>(store);
+    extrusionTextureShader = std::make_unique<ExtrusionTextureShader>(store);
     lineShader = std::make_unique<LineShader>(store);
     linesdfShader = std::make_unique<LineSDFShader>(store);
     linepatternShader = std::make_unique<LinepatternShader>(store);

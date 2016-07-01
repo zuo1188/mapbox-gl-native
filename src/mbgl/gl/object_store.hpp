@@ -42,6 +42,16 @@ struct VAODeleter {
     void operator()(GLuint) const;
 };
 
+struct FramebufferDeleter {
+    ObjectStore* store;
+    void operator()(GLuint) const;
+};
+
+struct RenderbufferDeleter {
+    ObjectStore* store;
+    void operator()(GLuint) const;
+};
+
 using ObjectPool = std::array<GLuint, TextureMax>;
 
 struct TexturePoolDeleter {
@@ -55,6 +65,8 @@ using UniqueBuffer = std_experimental::unique_resource<GLuint, BufferDeleter>;
 using UniqueTexture = std_experimental::unique_resource<GLuint, TextureDeleter>;
 using UniqueVAO = std_experimental::unique_resource<GLuint, VAODeleter>;
 using UniqueTexturePool = std_experimental::unique_resource<ObjectPool, TexturePoolDeleter>;
+using UniqueFramebuffer = std_experimental::unique_resource<GLuint, FramebufferDeleter>;
+using UniqueRenderbuffer = std_experimental::unique_resource<GLuint, RenderbufferDeleter>;
 
 class ObjectStore : private util::noncopyable {
 public:
@@ -93,6 +105,18 @@ public:
         return UniqueTexturePool { std::move(ids), { this } };
     }
 
+    UniqueFramebuffer createFramebuffer() {
+        GLuint id = 0;
+        MBGL_CHECK_ERROR(glGenFramebuffers(1, &id));
+        return UniqueFramebuffer { std::move(id), { this } };
+    }
+
+    UniqueRenderbuffer createRenderbuffer() {
+        GLuint id = 0;
+        MBGL_CHECK_ERROR(glGenRenderbuffers(1, &id));
+        return UniqueRenderbuffer { std::move(id), { this } };
+    }
+
     // Actually remove the objects we marked as abandoned with the above methods.
     // Only call this while the OpenGL context is exclusive to this thread.
     void performCleanup();
@@ -102,7 +126,9 @@ public:
             && abandonedShaders.empty()
             && abandonedBuffers.empty()
             && abandonedTextures.empty()
-            && abandonedVAOs.empty();
+            && abandonedVAOs.empty()
+            && abandonedFramebuffers.empty()
+            && abandonedRenderbuffers.empty();
     }
 
 private:
@@ -112,12 +138,16 @@ private:
     friend TextureDeleter;
     friend VAODeleter;
     friend TexturePoolDeleter;
+    friend FramebufferDeleter;
+    friend RenderbufferDeleter;
 
     std::vector<GLuint> abandonedPrograms;
     std::vector<GLuint> abandonedShaders;
     std::vector<GLuint> abandonedBuffers;
     std::vector<GLuint> abandonedTextures;
     std::vector<GLuint> abandonedVAOs;
+    std::vector<GLuint> abandonedFramebuffers;
+    std::vector<GLuint> abandonedRenderbuffers;
 };
 
 } // namespace gl

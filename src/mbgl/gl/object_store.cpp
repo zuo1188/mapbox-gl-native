@@ -37,12 +37,24 @@ void TexturePoolDeleter::operator()(ObjectPool ids) const {
     }
 }
 
+void FramebufferDeleter::operator()(GLuint id) const {
+    assert(store);
+    store->abandonedFramebuffers.push_back(id);
+}
+
+void RenderbufferDeleter::operator()(GLuint id) const {
+    assert(store);
+    store->abandonedRenderbuffers.push_back(id);
+}
+
 ObjectStore::~ObjectStore() {
     assert(abandonedPrograms.empty());
     assert(abandonedShaders.empty());
     assert(abandonedBuffers.empty());
     assert(abandonedTextures.empty());
     assert(abandonedVAOs.empty());
+    assert(abandonedFramebuffers.empty());
+    assert(abandonedRenderbuffers.empty());
 }
 
 void ObjectStore::performCleanup() {
@@ -69,6 +81,16 @@ void ObjectStore::performCleanup() {
     if (!abandonedVAOs.empty()) {
         MBGL_CHECK_ERROR(gl::DeleteVertexArrays(int(abandonedVAOs.size()), abandonedVAOs.data()));
         abandonedVAOs.clear();
+    }
+
+    if (!abandonedFramebuffers.empty()) {
+        MBGL_CHECK_ERROR(glDeleteFramebuffers(int(abandonedFramebuffers.size()), abandonedFramebuffers.data()));
+        abandonedFramebuffers.clear();
+    }
+
+    if (!abandonedRenderbuffers.empty()) {
+        MBGL_CHECK_ERROR(glDeleteRenderbuffers(int(abandonedRenderbuffers.size()), abandonedRenderbuffers.data()));
+        abandonedRenderbuffers.clear();
     }
 }
 
