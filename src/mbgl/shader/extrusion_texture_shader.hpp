@@ -16,7 +16,7 @@ namespace mbgl {
         Uniform<GLfloat>                u_xdim     = {"u_xdim", *this};
         Uniform<GLfloat>                u_ydim     = {"u_ydim", *this};
         Uniform<GLfloat>                u_opacity  = {"u_opacity", *this};
-        Uniform<GLfloat>                u_texture  = {"u_texture", *this};
+        Uniform<GLint>                  u_texture  = {"u_texture", *this};
         // TODO is this right or GLbyte? there are no other uniform ints in the shaders
     };
     

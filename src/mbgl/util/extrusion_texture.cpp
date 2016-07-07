@@ -29,6 +29,11 @@ void ExtrusionTexture::bind(gl::TexturePool& texturePool, gl::ObjectStore& store
     }
 }
 
+void ExtrusionTexture::load(uint16_t _width, uint16_t _height) {
+    width = _width;
+    height = _height;
+}
+
 void ExtrusionTexture::upload(gl::TexturePool& texturePool, gl::ObjectStore& store) {
     if (!texture) {
         texture = texturePool.acquireTexture(store);
@@ -74,5 +79,6 @@ void ExtrusionTexture::bindFramebuffer(gl::ObjectStore& store) {
 
 void ExtrusionTexture::unbindFramebuffer() {
     MBGL_CHECK_ERROR(glBindFramebuffer(GL_FRAMEBUFFER, 0)); // TODO is 0 right?
+    MBGL_CHECK_ERROR(glBindTexture(GL_TEXTURE0, 0));
     // TODO delete fbo and rbos??????
 }

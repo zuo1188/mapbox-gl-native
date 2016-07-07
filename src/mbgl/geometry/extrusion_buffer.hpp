@@ -7,7 +7,7 @@
 namespace mbgl {
 
     class ExtrusionVertexBuffer : public Buffer<
-    4 // bytes per coordinates (2 * unsigned short == 4 bytes)
+    18 // bytes per coordinates (2 * unsigned short == 4 bytes)
     // TODO ^^ that?
     > {
     public:

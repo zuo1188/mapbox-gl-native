@@ -25,6 +25,9 @@ namespace mbgl {
         mat4 vertexMatrix;
         const auto zScale = pow(2, state.getZoom() / 50000);
         matrix::scale(vertexMatrix, translatedMatrix(matrix, properties.extrusionTranslate, tileID, properties.extrusionTranslateAnchor), 1, 1, zScale);
+
+//        mat4 vertexMatrix =
+//            translatedMatrix(matrix, properties.extrusionTranslate, tileID, properties.extrusionTranslateAnchor);
         // TODO not sure if the intermediary translate matrix works -- have not yet checked in JS
 
         Color extrusionColor = properties.extrusionColor;
@@ -40,19 +43,21 @@ namespace mbgl {
         config.depthMask = GL_TRUE;
 
         // CREATE AND BIND NEW TEXTURE
-        config.activeTexture = GL_TEXTURE0;
-        bucket.texture.bind(texturePool, store);
+//        config.activeTexture = GL_TEXTURE1;
+//        bucket.texture.load(state.getWidth(), state.getHeight());
+//        bucket.texture.bind(texturePool, store);
 
         // SET TEXTURE CONFIG OPTIONS
 
         // TODO are these available as config options?
-        glClearStencil(0x80);
-        glStencilMask(0xFF);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glStencilMask(0x00);
+        // TODO i commented these out to make this not turn all blue -- ...
+//        glClearStencil(0x80);
+//        glStencilMask(0xFF);
+//        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//        glStencilMask(0x00);
 
         setDepthSublayer(2);
-        config.depthTest = GL_TRUE;
+//        config.depthTest = GL_TRUE;
 
         // DRAW EXTRUSIONS ONTO TEXTURE
 
@@ -72,7 +77,7 @@ namespace mbgl {
                 config.program = isOverdraw() ? extrusionShader->getOverdrawID() : extrusionShader->getID();
                 extrusionShader->u_color = extrusionColor;
                 extrusionShader->u_shadow = extrusionShadowColor;
-//                extrusionShader->u_opacity = extrusionOpacity;
+                extrusionShader->u_opacity = opacity;
                 extrusionShader->u_matrix = vertexMatrix;
                 mat3 lightmat;
                 vec3 lightdir;
@@ -82,6 +87,7 @@ namespace mbgl {
 
                 // Draw the actual triangles into the color & stencil buffer.
 //                setDepthSublayer(1);
+
                 bucket.drawElements(*extrusionShader, store);
             }
         }
@@ -90,26 +96,27 @@ namespace mbgl {
 
         // UNBIND TEXTURE + SET CONFIG
 
-        bucket.texture.unbindFramebuffer();
-
-        config.activeTexture = GL_TEXTURE0;
-        // TODO i suspect i need to separate the texture ptr out here, judging from searching glBindTexture elsewhere in this codebase
-        MBGL_CHECK_ERROR(glBindTexture(GL_TEXTURE_2D, *bucket.texture.texture));
-
-        extrusionTextureShader->u_opacity = opacity;
-        extrusionTextureShader->u_texture = 1;
-
-        mat4 textureMatrix;
-        matrix::ortho(textureMatrix, 0, state.getWidth(), state.getHeight(), 0, 0, 1);
-        extrusionTextureShader->u_matrix = textureMatrix;
-
-        config.depthTest = GL_FALSE;
-
-        extrusionTextureShader->u_xdim = state.getWidth();
-        extrusionTextureShader->u_ydim = state.getHeight();
-
-        extrusionTextureArray.bind(*extrusionTextureShader, tileStencilBuffer, BUFFER_OFFSET(0), store);
-        MBGL_CHECK_ERROR(glDrawArrays(GL_TRIANGLE_STRIP, 0, (GLsizei)tileStencilBuffer.index()));
+//        bucket.texture.unbindFramebuffer();
+//
+//        config.activeTexture = GL_TEXTURE0;
+//        // TODO i suspect i need to separate the texture ptr out here, judging from searching glBindTexture elsewhere in this codebase
+//        MBGL_CHECK_ERROR(glBindTexture(GL_TEXTURE_2D, 0));
+////        MBGL_CHECK_ERROR(glBindTexture(GL_TEXTURE_2D, *bucket.texture.texture));
+//
+//        extrusionTextureShader->u_opacity = opacity;
+//        extrusionTextureShader->u_texture = *bucket.texture.texture;
+//
+//        mat4 textureMatrix;
+//        matrix::ortho(textureMatrix, 0, state.getWidth(), state.getHeight(), 0, 0, 1);
+//        extrusionTextureShader->u_matrix = textureMatrix;
+//
+//        config.depthTest = GL_FALSE;
+//
+//        extrusionTextureShader->u_xdim = state.getWidth();
+//        extrusionTextureShader->u_ydim = state.getHeight();
+//
+//        extrusionTextureArray.bind(*extrusionTextureShader, tileStencilBuffer, BUFFER_OFFSET(0), store);
+//        MBGL_CHECK_ERROR(glDrawArrays(GL_TRIANGLE_STRIP, 0, (GLsizei)tileStencilBuffer.index()));
 
 
         // PAINT TEXTURE TO MAP

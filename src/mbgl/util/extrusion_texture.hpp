@@ -17,6 +17,8 @@ namespace mbgl {
         // bind current texture
         void bind(gl::TexturePool&, gl::ObjectStore&);
 
+        void load(uint16_t _width, uint16_t _height);
+
         // uploads the texture if it hasn't been uploaded yet.
         void upload(gl::TexturePool&, gl::ObjectStore&);
 
