@@ -89,13 +89,14 @@
     }
     
     self.layer.transform = CATransform3DIdentity;
-    if ( ! self.scalesWithViewingDistance)
+    MGLMapCamera *camera = self.mapView.camera;
+    if (self.flat)
     {
-        return;
+        self.layer.transform = CATransform3DRotate(self.layer.transform, MGLRadiansFromDegrees(camera.pitch), 1.0, 0, 0);
     }
     
     CGFloat superviewHeight = CGRectGetHeight(self.superview.frame);
-    if (superviewHeight > 0.0) {
+    if ( ! self.scalesWithViewingDistance && superviewHeight > 0.0) {
         // Find the maximum amount of scale reduction to apply as the view's center moves from the top
         // of the superview to the bottom. For example, if this view's center has moved 25% of the way
         // from the top of the superview towards the bottom then the maximum scale reduction is 1 - .25
@@ -108,7 +109,7 @@
         // as the map view will allow). The map view's maximum pitch is defined in `mbgl::util::PITCH_MAX`.
         // Since it is possible for the map view to report a pitch less than 0 due to the nature of
         // how the gesture information is captured, the value is guarded with MAX.
-        CGFloat pitchIntensity = MAX(self.mapView.camera.pitch, 0) / MGLDegreesFromRadians(mbgl::util::PITCH_MAX);
+        CGFloat pitchIntensity = MAX(camera.pitch, 0) / MGLDegreesFromRadians(mbgl::util::PITCH_MAX);
        
         // The pitch adjusted scale is the inverse proportion of the maximum possible scale reduction
         // multiplied by the pitch intensity. For example, if the maximum scale reduction is 75% and the
@@ -116,8 +117,7 @@
         // reduction is then normalized for a scale of 1.0.
         CGFloat pitchAdjustedScale = 1.0 - maxScaleReduction * pitchIntensity;
         
-        CATransform3D transform = self.layer.transform;
-        self.layer.transform = CATransform3DScale(transform, pitchAdjustedScale, pitchAdjustedScale, 1);
+        self.layer.transform = CATransform3DScale(self.layer.transform, pitchAdjustedScale, pitchAdjustedScale, 1);
     }
 }
 
