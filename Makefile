@@ -374,7 +374,7 @@ ANDROID_ABIS = arm-v5 arm-v7 arm-v8 x86 x86-64 mips
 
 define ANDROID_RULES
 
-build/android-$1/$(BUILDTYPE):
+build/android-$1/$(BUILDTYPE): $(BUILD_DEPS)
 	mkdir -p build/android-$1/$(BUILDTYPE)
 
 build/android-$1/$(BUILDTYPE)/toolchain.cmake: platform/android/scripts/toolchain.sh build/android-$1/$(BUILDTYPE)
