@@ -14,10 +14,10 @@ set(MBGL_QT_LIBRARIES
 )
 
 add_library(qmapboxgl SHARED
-    platform/qt/include/qquickmapboxgl.hpp
-    platform/qt/src/qquickmapboxgl.cpp
-    platform/qt/src/qquickmapboxglrenderer.cpp
-    platform/qt/src/qquickmapboxglrenderer.hpp
+    ${CMAKE_SOURCE_DIR}/platform/qt/include/qquickmapboxgl.hpp
+    ${CMAKE_SOURCE_DIR}/platform/qt/src/qquickmapboxgl.cpp
+    ${CMAKE_SOURCE_DIR}/platform/qt/src/qquickmapboxglrenderer.cpp
+    ${CMAKE_SOURCE_DIR}/platform/qt/src/qquickmapboxglrenderer.hpp
 )
 
 target_link_libraries(qmapboxgl
@@ -37,8 +37,8 @@ target_link_libraries(mbgl-qt
 
 # QtQuick app
 add_executable(mbgl-qt-qml
-    platform/qt/qmlapp/main.cpp
-    platform/qt/qmlapp/qml.qrc
+    ${CMAKE_SOURCE_DIR}/platform/qt/qmlapp/main.cpp
+    ${CMAKE_SOURCE_DIR}/platform/qt/qmlapp/qml.qrc
 )
 
 target_link_libraries(mbgl-qt-qml

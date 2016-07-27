@@ -13,74 +13,74 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(MBGL_QT_FILES
     # File source
-    PRIVATE platform/default/asset_file_source.cpp
-    PRIVATE platform/default/default_file_source.cpp
-    PRIVATE platform/default/online_file_source.cpp
+    PRIVATE ${CMAKE_SOURCE_DIR}/platform/default/asset_file_source.cpp
+    PRIVATE ${CMAKE_SOURCE_DIR}/platform/default/default_file_source.cpp
+    PRIVATE ${CMAKE_SOURCE_DIR}/platform/default/online_file_source.cpp
 
     # Offline
-    PRIVATE platform/default/mbgl/storage/offline.cpp
-    PRIVATE platform/default/mbgl/storage/offline_database.cpp
-    PRIVATE platform/default/mbgl/storage/offline_database.hpp
-    PRIVATE platform/default/mbgl/storage/offline_download.cpp
-    PRIVATE platform/default/mbgl/storage/offline_download.hpp
-    PRIVATE platform/default/sqlite3.cpp
-    PRIVATE platform/default/sqlite3.hpp
+    PRIVATE ${CMAKE_SOURCE_DIR}/platform/default/mbgl/storage/offline.cpp
+    PRIVATE ${CMAKE_SOURCE_DIR}/platform/default/mbgl/storage/offline_database.cpp
+    PRIVATE ${CMAKE_SOURCE_DIR}/platform/default/mbgl/storage/offline_database.hpp
+    PRIVATE ${CMAKE_SOURCE_DIR}/platform/default/mbgl/storage/offline_download.cpp
+    PRIVATE ${CMAKE_SOURCE_DIR}/platform/default/mbgl/storage/offline_download.hpp
+    PRIVATE ${CMAKE_SOURCE_DIR}/platform/default/sqlite3.cpp
+    PRIVATE ${CMAKE_SOURCE_DIR}/platform/default/sqlite3.hpp
 
     # Misc
-    PRIVATE platform/default/log_stderr.cpp
+    PRIVATE ${CMAKE_SOURCE_DIR}/platform/default/log_stderr.cpp
 
     # Headless headless_view_cgl
-    PRIVATE platform/default/headless_display.cpp
-    PRIVATE platform/default/headless_view.cpp
+    PRIVATE ${CMAKE_SOURCE_DIR}/platform/default/headless_display.cpp
+    PRIVATE ${CMAKE_SOURCE_DIR}/platform/default/headless_view.cpp
 
     # Platform integration
-    PRIVATE platform/qt/src/async_task.cpp
-    PRIVATE platform/qt/src/async_task_impl.hpp
-    PRIVATE platform/qt/src/http_file_source.cpp
-    PRIVATE platform/qt/src/http_file_source.hpp
-    PRIVATE platform/qt/src/http_request.cpp
-    PRIVATE platform/qt/src/http_request.hpp
-    PRIVATE platform/qt/src/image.cpp
-    PRIVATE platform/qt/src/qmapbox.cpp
-    PRIVATE platform/qt/src/qmapboxgl.cpp
-    PRIVATE platform/qt/src/qmapboxgl_p.hpp
-    PRIVATE platform/qt/src/run_loop.cpp
-    PRIVATE platform/qt/src/run_loop_impl.hpp
-    PRIVATE platform/qt/src/string_stdlib.cpp
-    PRIVATE platform/qt/src/timer.cpp
-    PRIVATE platform/qt/src/timer_impl.hpp
+    PRIVATE ${CMAKE_SOURCE_DIR}/platform/qt/src/async_task.cpp
+    PRIVATE ${CMAKE_SOURCE_DIR}/platform/qt/src/async_task_impl.hpp
+    PRIVATE ${CMAKE_SOURCE_DIR}/platform/qt/src/http_file_source.cpp
+    PRIVATE ${CMAKE_SOURCE_DIR}/platform/qt/src/http_file_source.hpp
+    PRIVATE ${CMAKE_SOURCE_DIR}/platform/qt/src/http_request.cpp
+    PRIVATE ${CMAKE_SOURCE_DIR}/platform/qt/src/http_request.hpp
+    PRIVATE ${CMAKE_SOURCE_DIR}/platform/qt/src/image.cpp
+    PRIVATE ${CMAKE_SOURCE_DIR}/platform/qt/src/qmapbox.cpp
+    PRIVATE ${CMAKE_SOURCE_DIR}/platform/qt/src/qmapboxgl.cpp
+    PRIVATE ${CMAKE_SOURCE_DIR}/platform/qt/src/qmapboxgl_p.hpp
+    PRIVATE ${CMAKE_SOURCE_DIR}/platform/qt/src/run_loop.cpp
+    PRIVATE ${CMAKE_SOURCE_DIR}/platform/qt/src/run_loop_impl.hpp
+    PRIVATE ${CMAKE_SOURCE_DIR}/platform/qt/src/string_stdlib.cpp
+    PRIVATE ${CMAKE_SOURCE_DIR}/platform/qt/src/timer.cpp
+    PRIVATE ${CMAKE_SOURCE_DIR}/platform/qt/src/timer_impl.hpp
 
     # Qt resources
-    PRIVATE platform/qt/qmapbox.qrc
+    PRIVATE ${CMAKE_SOURCE_DIR}/platform/qt/qmapbox.qrc
 
     # Public headers
-    PRIVATE platform/qt/include/qmapbox.hpp
-    PRIVATE platform/qt/include/qmapboxgl.hpp
+    PRIVATE ${CMAKE_SOURCE_DIR}/platform/qt/include/qmapbox.hpp
+    PRIVATE ${CMAKE_SOURCE_DIR}/platform/qt/include/qmapboxgl.hpp
 )
 
 include_directories(
-    PRIVATE platform/qt/include
+    PRIVATE ${CMAKE_SOURCE_DIR}/platform/qt/include
 )
 
 # C++ app
 add_executable(mbgl-qt
-    platform/qt/app/main.cpp
-    platform/qt/app/mapwindow.cpp
-    platform/qt/app/mapwindow.hpp
-    platform/qt/app/source.qrc
+    ${CMAKE_SOURCE_DIR}/platform/qt/app/main.cpp
+    ${CMAKE_SOURCE_DIR}/platform/qt/app/mapwindow.cpp
+    ${CMAKE_SOURCE_DIR}/platform/qt/app/mapwindow.hpp
+    ${CMAKE_SOURCE_DIR}/platform/qt/app/source.qrc
 )
 
 if(WITH_QT_4)
-    include(platform/qt/qt4.cmake)
+    include(${CMAKE_SOURCE_DIR}/platform/qt/qt4.cmake)
 else()
-    include(platform/qt/qt5.cmake)
+    include(${CMAKE_SOURCE_DIR}/platform/qt/qt5.cmake)
 endif()
 
 # OS specific configurations
 if (BUILD_PLATFORM STREQUAL "macos")
     list(APPEND MBGL_QT_FILES
-        PRIVATE platform/darwin/src/nsthread.mm
-        PRIVATE platform/darwin/src/headless_view_cgl.cpp
+        PRIVATE ${CMAKE_SOURCE_DIR}/platform/darwin/src/nsthread.mm
+        PRIVATE ${CMAKE_SOURCE_DIR}/platform/darwin/src/headless_view_cgl.cpp
     )
     list(APPEND MBGL_QT_LIBRARIES
         PRIVATE "-framework Foundation"
@@ -88,8 +88,8 @@ if (BUILD_PLATFORM STREQUAL "macos")
     )
 else()
     list(APPEND MBGL_QT_FILES
-        PRIVATE platform/default/thread.cpp
-        PRIVATE platform/default/headless_view_glx.cpp
+        PRIVATE ${CMAKE_SOURCE_DIR}/platform/default/thread.cpp
+        PRIVATE ${CMAKE_SOURCE_DIR}/platform/default/headless_view_glx.cpp
     )
     list(APPEND MBGL_QT_LIBRARIES
         PRIVATE -lGL
