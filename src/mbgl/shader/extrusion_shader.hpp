@@ -16,7 +16,7 @@ public:
     Uniform<Color>                  u_shadow   = {"u_shadow", *this};
     Uniform<Color>                  u_color    = {"u_color",  *this};
     Uniform<GLfloat>                u_opacity  = {"u_opacity", *this};
-    UniformVector<3> u_lightdir = {"u_lightdir", *this};
+    UniformVector<3>                u_lightdir = {"u_lightdir", *this};
 
 protected:
     GLint a_minH = -1;
