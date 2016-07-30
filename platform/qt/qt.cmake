@@ -29,10 +29,6 @@ set(MBGL_QT_FILES
     # Misc
     PRIVATE ${CMAKE_SOURCE_DIR}/platform/default/log_stderr.cpp
 
-    # Headless headless_view_cgl
-    PRIVATE ${CMAKE_SOURCE_DIR}/platform/default/headless_display.cpp
-    PRIVATE ${CMAKE_SOURCE_DIR}/platform/default/headless_view.cpp
-
     # Platform integration
     PRIVATE ${CMAKE_SOURCE_DIR}/platform/qt/src/async_task.cpp
     PRIVATE ${CMAKE_SOURCE_DIR}/platform/qt/src/async_task_impl.hpp
@@ -80,7 +76,6 @@ endif()
 if (BUILD_PLATFORM STREQUAL "macos")
     list(APPEND MBGL_QT_FILES
         PRIVATE ${CMAKE_SOURCE_DIR}/platform/darwin/src/nsthread.mm
-        PRIVATE ${CMAKE_SOURCE_DIR}/platform/darwin/src/headless_view_cgl.cpp
     )
     list(APPEND MBGL_QT_LIBRARIES
         PRIVATE "-framework Foundation"
@@ -89,10 +84,5 @@ if (BUILD_PLATFORM STREQUAL "macos")
 else()
     list(APPEND MBGL_QT_FILES
         PRIVATE ${CMAKE_SOURCE_DIR}/platform/default/thread.cpp
-        PRIVATE ${CMAKE_SOURCE_DIR}/platform/default/headless_view_glx.cpp
-    )
-    list(APPEND MBGL_QT_LIBRARIES
-        PRIVATE -lGL
-        PRIVATE -lX11
     )
 endif()

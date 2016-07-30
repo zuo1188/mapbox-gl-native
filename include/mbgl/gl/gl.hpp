@@ -24,6 +24,9 @@
     #else
         #error Unsupported Apple platform
     #endif
+#elif __QT__
+    #define GL_GLEXT_PROTOTYPES
+    #include <qopengl.h>
 #elif __ANDROID__ || MBGL_USE_GLES2
     #define GL_GLEXT_PROTOTYPES
     #include <GLES2/gl2.h>
