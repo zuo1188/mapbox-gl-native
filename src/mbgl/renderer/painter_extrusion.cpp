@@ -20,8 +20,6 @@ void Painter::renderExtrusion(ExtrusionBucket& bucket,
                               const UnwrappedTileID& tileID,
                               const mat4& matrix) {
     const ExtrusionPaintProperties& properties = layer.impl->paint;
-//    mat4 vertexMatrix =
-//    translatedMatrix(matrix, properties.extrusionTranslate, tileID, properties.extrusionTranslateAnchor);
 
     mat4 vertexMatrix;
     const auto zScale = pow(2, state.getZoom()) / 50000;
@@ -40,8 +38,6 @@ void Painter::renderExtrusion(ExtrusionBucket& bucket,
     if (!isOutlineColorDefined) {
         strokeColor = extrusionColor;
     }
-
-//    auto worldSize = util::convert<GLfloat>(frame.framebufferSize);
 
     bool pattern = !properties.extrusionPattern.value.from.empty();
 //    bool outline = properties.extrusionAntialias && !pattern && isOutlineColorDefined;
@@ -68,8 +64,10 @@ void Painter::renderExtrusion(ExtrusionBucket& bucket,
             extrusionShader->u_opacity = opacity;
 
             mat3 lightmat;
+            matrix::identity(lightmat);
             vec3 lightdir {{ -0.5, -0.6, 0.9 }};
-            matrix::rotate(lightmat, lightmat, -state.getAngle());
+            const auto angle = -state.getAngle();
+            matrix::rotate(lightmat, lightmat, angle);
             vector::transformMat3(lightdir, lightdir, lightmat);
             extrusionShader->u_lightdir = lightdir;
 
