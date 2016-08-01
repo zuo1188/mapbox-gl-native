@@ -13,7 +13,7 @@ namespace mbgl {
     public:
         typedef int16_t vertex_type;
 
-        void add(vertex_type x, vertex_type y, vertex_type minH, vertex_type maxH, vertex_type nx, vertex_type ny, vertex_type nz, unsigned short t, unsigned short isUpper, vertex_type e);
+        void add(vertex_type x, vertex_type y, vertex_type minH, vertex_type maxH, double nx, double ny, double nz, unsigned short t, vertex_type e);
     };
     
 } // namespace mbgl

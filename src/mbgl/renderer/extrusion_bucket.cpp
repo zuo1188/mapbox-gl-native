@@ -55,13 +55,15 @@ namespace mbgl {
             std::vector<GLsizei> flatIndices;
             flatIndices.reserve(totalVertices);
 
-            if (triangleGroups.empty() || triangleGroups.back()->vertex_length + totalVertices > 65535) {
+            if (triangleGroups.empty() || triangleGroups.back()->vertex_length + (5 * (totalVertices - 1) + 1)  > 65535) {
                 triangleGroups.emplace_back(std::make_unique<TriangleGroup>());
             }
 
             TriangleGroup& triangleGroup = *triangleGroups.back();
             GLsizei triangleIndex = triangleGroup.vertex_length;
             GLsizei startIndex = triangleIndex;
+
+            assert(triangleIndex + (5 * (totalVertices - 1) + 1) <= 65535);
 
             for (const auto& ring : polygon) {
                 // Iterate over all the rings in this polygon -- usually this will be 1
@@ -71,34 +73,32 @@ namespace mbgl {
                 if (nVertices == 0)
                     continue;
 
-                if (lineGroups.empty() || lineGroups.back()->vertex_length + nVertices > 65535)
+                if (lineGroups.empty() || lineGroups.back()->vertex_length + (5 * (totalVertices - 1) + 1) > 65535)
                     lineGroups.emplace_back(std::make_unique<LineGroup>());
 
                 LineGroup& lineGroup = *lineGroups.back();
                 GLsizei lineIndex = lineGroup.vertex_length;
 
+                const int STANDIN_HEIGHT = rand() % 40 + 20;  // TODO TODO
+//                const auto STANDIN_HEIGHT = PropertyValue<T>::visit(feature.getProperties().find("height")->second);
+
                 // Add vertex for the first upper corner:
-                vertexBuffer.add(ring[0].x, ring[0].y, 0, 10, 0, 0, 1, 1, 1, 0);
+                vertexBuffer.add(ring[0].x, ring[0].y, 0, STANDIN_HEIGHT, 0, 0, 1, 1, 0);
+                flatIndices.emplace_back(triangleIndex);
+                triangleIndex++;
 
                 // Also add what would be the closing line segment:
                 lineElementsBuffer.add(lineIndex + nVertices - 1, lineIndex);
 
-                flatIndices.emplace_back(startIndex);
-                triangleIndex += 1;
-
                 float edgeDistance = 0;
-
-//                const auto STANDIN_HEIGHT = PropertyValue<T>::visit(feature.getProperties().find("height")->second);
-
-                const int STANDIN_HEIGHT = 50;  // TODO TODO
 
                 for (uint32_t i = 1; i < nVertices; i++) {
                     const auto& p1 = ring[i - 1];
                     const auto& p2 = ring[i];
 
                     // Add vertex for the i'th upper corner: this is p2; p1 was already added
-                    vertexBuffer.add(p2.x, p2.y, 0, STANDIN_HEIGHT, 0, 0, 1, 1, 1, 0);
-//                    if (i != nVertices - 1)
+                    vertexBuffer.add(p2.x, p2.y, 0, STANDIN_HEIGHT, 0, 0, 1, 1, 0);
+//                    if (i < nVertices - 1)
                         flatIndices.emplace_back(triangleIndex);
                     // Add line segment from the previous corner to this one
                     lineElementsBuffer.add(lineIndex + i - 1, lineIndex + i);
@@ -106,17 +106,17 @@ namespace mbgl {
                     const auto s1 = convertPoint<double>(p1);
                     const auto s2 = convertPoint<double>(p2);
 
-                    Point<double> perp = util::unit(util::perp(s2 - s1));
+                    const Point<double> perp = util::unit(util::perp(s2 - s1));
 
                     // Add four more vertices: this corner, prev corner, bottom two corners (duplicating corners because of the normal vertex calculations)
 
-                    vertexBuffer.add(p1.x, p1.y, 0, STANDIN_HEIGHT, perp.x, perp.y, 0, 0, 0, edgeDistance);
-                    vertexBuffer.add(p1.x, p1.y, 0, STANDIN_HEIGHT, perp.x, perp.y, 0, 1, 1, edgeDistance);
+                    vertexBuffer.add(p1.x, p1.y, 0, STANDIN_HEIGHT, perp.x, perp.y, 0, 0, edgeDistance);
+                    vertexBuffer.add(p1.x, p1.y, 0, STANDIN_HEIGHT, perp.x, perp.y, 0, 1, edgeDistance);
 
                     edgeDistance += util::dist<float>(s2, s1);
 
-                    vertexBuffer.add(p2.x, p2.y, 0, STANDIN_HEIGHT, perp.x, perp.y, 0, 0, 0, edgeDistance);
-                    vertexBuffer.add(p2.x, p2.y, 0, STANDIN_HEIGHT, perp.x, perp.y, 0, 1, 1, edgeDistance);
+                    vertexBuffer.add(p2.x, p2.y, 0, STANDIN_HEIGHT, perp.x, perp.y, 0, 0, edgeDistance);
+                    vertexBuffer.add(p2.x, p2.y, 0, STANDIN_HEIGHT, perp.x, perp.y, 0, 1, edgeDistance);
 
                     triangleElementsBuffer.add(triangleIndex + 1, triangleIndex + 2, triangleIndex + 3);
                     triangleElementsBuffer.add(triangleIndex + 2, triangleIndex + 3, triangleIndex + 4);
@@ -130,22 +130,22 @@ namespace mbgl {
 
             std::vector<uint32_t> indices = mapbox::earcut(polygon);
 
-            std::size_t nIndicies = indices.size();
-            assert(nIndicies % 3 == 0);
+            std::size_t nIndices = indices.size();
+            assert(nIndices % 3 == 0);
+//            assert(std::none_of(indices.begin(), indices.end(), [&](uint32_t i){ return i == totalVertices - 1; }));
 
-
-//            auto offset = [](uint32_t i) { return 1 + 4 * (std::max(uint32_t(0), uint32_t(i - 2))); };
-
-            for (uint32_t i = 0; i < nIndicies; i += 3) {
+            for (uint32_t i = 0; i < nIndices; i += 3) {
+//                for (short j = 0; j < 3; ++j) {
+//                    assert(flatIndices[indices[i + j]] >= startIndex);
+//                    assert(flatIndices[indices[i + j]] < static_cast<int>(startIndex + (5 * (totalVertices - 1) + 1)));
+//                }
                 triangleElementsBuffer.add(flatIndices[indices[i]],
                                            flatIndices[indices[i + 1]],
                                            flatIndices[indices[i + 2]]);
             }
 
-            triangleGroup.vertex_length = triangleIndex
-//                + totalVertices
-            ;
-            triangleGroup.elements_length += nIndicies / 3;
+            triangleGroup.vertex_length = triangleIndex;
+            triangleGroup.elements_length += nIndices / 3;
         }
     }
 

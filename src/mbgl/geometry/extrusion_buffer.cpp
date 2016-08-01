@@ -7,7 +7,7 @@
 
 using namespace mbgl;
 
-void ExtrusionVertexBuffer::add(vertex_type x, vertex_type y, vertex_type minH, vertex_type maxH, vertex_type nx, vertex_type ny, vertex_type nz, unsigned short t, unsigned short isUpper, vertex_type e) {
+void ExtrusionVertexBuffer::add(vertex_type x, vertex_type y, vertex_type minH, vertex_type maxH, double nx, double ny, double nz, unsigned short t, vertex_type e) {
     vertex_type *vertices = static_cast<vertex_type *>(addElement());
 
     const auto factor = pow(2, 13);
@@ -26,7 +26,7 @@ void ExtrusionVertexBuffer::add(vertex_type x, vertex_type y, vertex_type minH, 
     vertices[6] = nz * factor * 2;
 
     // a_isUpper
-    vertices[7] = isUpper;
+    vertices[7] = t;
 
     // a_edgedistance
     vertices[8] = e;
