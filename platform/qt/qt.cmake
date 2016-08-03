@@ -28,7 +28,7 @@ set(MBGL_QT_FILES
 
     # Misc
     PRIVATE platform/default/log_stderr.cpp
-    PRIVATE platform/default/thread_local.cpp
+    PRIVATE platform/qt/src/thread_local.cpp
 
     # Headless headless_view_cgl
     PRIVATE platform/default/headless_display.cpp
