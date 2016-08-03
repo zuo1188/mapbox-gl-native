@@ -31,6 +31,7 @@ macro(mbgl_platform_core)
         PRIVATE platform/default/log_stderr.cpp
         PRIVATE platform/default/string_stdlib.cpp
         PRIVATE platform/default/thread.cpp
+        PRIVATE platform/default/thread_local.cpp
 
         # Image handling
         PRIVATE platform/default/image.cpp

@@ -28,6 +28,7 @@ set(MBGL_QT_FILES
 
     # Misc
     PRIVATE platform/default/log_stderr.cpp
+    PRIVATE platform/default/thread_local.cpp
 
     # Platform integration
     PRIVATE platform/qt/src/async_task.cpp

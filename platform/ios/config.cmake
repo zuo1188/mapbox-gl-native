@@ -29,6 +29,7 @@ macro(mbgl_platform_core)
         PRIVATE platform/darwin/src/nsthread.mm
         PRIVATE platform/darwin/src/reachability.m
         PRIVATE platform/darwin/src/string_nsstring.mm
+        PRIVATE platform/default/thread_local.cpp
 
         # Image handling
         PRIVATE platform/darwin/src/image.mm

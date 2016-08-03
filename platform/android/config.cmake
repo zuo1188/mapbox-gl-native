@@ -37,6 +37,7 @@ macro(mbgl_platform_core)
         # Misc
         PRIVATE platform/android/src/log_android.cpp
         PRIVATE platform/default/string_stdlib.cpp
+        PRIVATE platform/default/thread_local.cpp
 
         # Image handling
         PRIVATE platform/default/image.cpp
