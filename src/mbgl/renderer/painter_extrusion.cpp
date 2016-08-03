@@ -7,6 +7,7 @@
 //#include <mbgl/shader/outlinepattern_shader.hpp>
 //#include <mbgl/shader/pattern_shader.hpp>
 #include <mbgl/shader/extrusion_shader.hpp>
+#include <mbgl/shader/extrusion_texture_shader.hpp>
 #include <mbgl/util/convert.hpp>
 #include <mbgl/util/mat4.hpp>
 #include <mbgl/util/vec3.hpp>
@@ -24,11 +25,7 @@ void Painter::renderExtrusion(ExtrusionBucket& bucket,
     mat4 vertexMatrix;
     const auto zScale = pow(2, state.getZoom()) / 50000;
     matrix::scale(vertexMatrix, translatedMatrix(matrix, properties.extrusionTranslate, tileID, properties.extrusionTranslateAnchor), 1, 1, zScale);
-
-//        mat4 vertexMatrix =
-//            translatedMatrix(matrix, properties.extrusionTranslate, tileID, properties.extrusionTranslateAnchor);
     // TODO not sure if the intermediary translate matrix works -- have not yet checked in JS
-
 
     Color extrusionColor = properties.extrusionColor;
     float opacity = properties.extrusionOpacity;
@@ -43,6 +40,22 @@ void Painter::renderExtrusion(ExtrusionBucket& bucket,
 //    bool outline = properties.extrusionAntialias && !pattern && isOutlineColorDefined;
 //    bool fringeline = properties.extrusionAntialias && !pattern && !isOutlineColorDefined;
 
+    config.stencilTest = GL_FALSE;
+    config.depthMask = GL_TRUE;
+    config.activeTexture = GL_TEXTURE1;
+
+    // Set up texture dimensions
+    bucket.texture.load(state.getWidth(), state.getHeight());
+
+    // Bind framebuffer
+    bucket.texture.bind(store);
+
+    MBGL_CHECK_ERROR(glClearStencil(0x80));
+    MBGL_CHECK_ERROR(glStencilMask(0xFF));
+    MBGL_CHECK_ERROR(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+    MBGL_CHECK_ERROR(glStencilMask(0x00));
+
+    // DRAW EXTRUSIONS ONTO TEXTURE
     config.stencilOp.reset();
     config.stencilTest = GL_TRUE;
     config.depthFunc.reset();
@@ -76,6 +89,40 @@ void Painter::renderExtrusion(ExtrusionBucket& bucket,
             bucket.drawElements(*extrusionShader, store);
         }
     }
+
+    // DRAW STROKE ONTO TEXTURE
+
+    // UNBIND TEXTURE + SET CONFIG
+
+    bucket.texture.unbindFramebuffer();
+
+    config.activeTexture = GL_TEXTURE0;
+    config.program = extrusionTextureShader->getID();
+    // TODO i suspect i need to separate the texture ptr out here, judging from searching glBindTexture elsewhere in this codebase
+//    MBGL_CHECK_ERROR(glBindTexture(GL_TEXTURE_2D, 0));
+//    MBGL_CHECK_ERROR(glBindTexture(GL_TEXTURE_2D, *bucket.texture.texture));
+
+    extrusionTextureShader->u_opacity = opacity;
+    extrusionTextureShader->u_texture = *(bucket.texture.texture);
+
+    mat4 textureMatrix;
+    matrix::ortho(textureMatrix, 0, state.getWidth(), state.getHeight(), 0, 0, 1);
+    extrusionTextureShader->u_matrix = textureMatrix;
+
+    config.depthTest = GL_FALSE;
+
+    extrusionTextureShader->u_xdim = state.getWidth();
+    extrusionTextureShader->u_ydim = state.getHeight();
+
+    extrusionTextureArray.bind(*extrusionTextureShader, tileStencilBuffer, BUFFER_OFFSET(0), store);
+    MBGL_CHECK_ERROR(glDrawArrays(GL_TRIANGLE_STRIP, 0, (GLsizei)tileStencilBuffer.index()));
+
+
+        // PAINT TEXTURE TO MAP
+
+
+
+
 }
 
 } // namespace mbgl

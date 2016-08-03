@@ -15,12 +15,16 @@ namespace mbgl {
 
     public:
         // bind current texture
-        void bind(gl::TexturePool&, gl::ObjectStore&);
+        void bind(
+//                  gl::TexturePool&,
+                  gl::ObjectStore&);
 
         void load(uint16_t _width, uint16_t _height);
 
         // uploads the texture if it hasn't been uploaded yet.
-        void upload(gl::TexturePool&, gl::ObjectStore&);
+//        void upload(
+////                    gl::TexturePool&,
+//                    gl::ObjectStore&);
 
         // creates and binds framebuffer and renderbuffer
         void bindFramebuffer(gl::ObjectStore&);
@@ -32,7 +36,8 @@ namespace mbgl {
         GLsizei height = 0;
 
         // GL buffer object handle.
-        mbgl::optional<gl::PooledTexture> texture;
+        mbgl::optional<gl::UniqueTexture> texture;
+//        mbgl::optional<gl::PooledTexture> texture;
 
         // GL framebuffer + renderbuffer object handles
         mbgl::optional<gl::UniqueFramebuffer> fbo;

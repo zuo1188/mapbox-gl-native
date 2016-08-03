@@ -135,10 +135,6 @@ void ExtrusionBucket::addGeometry(const GeometryCollection& geometry
 //            assert(std::none_of(indices.begin(), indices.end(), [&](uint32_t i){ return i == totalVertices - 1; }));
 
         for (uint32_t i = 0; i < nIndices; i += 3) {
-//                for (short j = 0; j < 3; ++j) {
-//                    assert(flatIndices[indices[i + j]] >= startIndex);
-//                    assert(flatIndices[indices[i + j]] < static_cast<int>(startIndex + (5 * (totalVertices - 1) + 1)));
-//                }
             triangleElementsBuffer.add(flatIndices[indices[i]],
                                        flatIndices[indices[i + 1]],
                                        flatIndices[indices[i + 2]]);
