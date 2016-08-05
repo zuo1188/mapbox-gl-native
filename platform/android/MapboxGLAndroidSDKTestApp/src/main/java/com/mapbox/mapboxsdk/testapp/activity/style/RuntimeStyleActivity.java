@@ -16,6 +16,7 @@ import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
+import com.mapbox.mapboxsdk.style.layers.CircleLayer;
 import com.mapbox.mapboxsdk.style.layers.FillLayer;
 import com.mapbox.mapboxsdk.style.layers.Function;
 import com.mapbox.mapboxsdk.style.layers.Layer;
@@ -71,8 +72,19 @@ public class RuntimeStyleActivity extends AppCompatActivity {
                 //Store for later
                 mapboxMap = map;
 
-                //Center and Zoom (Amsterdam, zoomed to streets)
-                mapboxMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(52.379189, 4.899431), 14));
+                //Crash it!!
+                VectorSource museums = new VectorSource("museums_source", "mapbox://mapbox.2opop9hr");
+                mapboxMap.addSource(museums);
+
+                CircleLayer museumsLayer = new CircleLayer("museums", "museums_source");
+                museumsLayer.setSourceLayer("museum-cusco");
+                museumsLayer.setProperties(
+                        visibility(VISIBLE),
+                        circleRadius(8f),
+                        circleColor(Color.argb(1, 55, 148, 179))
+                );
+
+                mapboxMap.addLayer(museumsLayer);
             }
         });
     }
