@@ -12,13 +12,6 @@ struct gbm_device {};
 typedef void* EGLContext;
 typedef void* EGLDisplay;
 typedef void* EGLConfig;
-#if 0
-typedef struct _XDisplay Display;
-typedef struct __GLXcontextRec* GLXContext;
-typedef struct __GLXFBConfigRec* GLXFBConfig;
-typedef long unsigned int XID;
-typedef XID GLXPbuffer;
-#endif
 #endif
 
 #include <mbgl/map/backend.hpp>
@@ -70,22 +63,13 @@ private:
 #if MBGL_USE_EAGL
     void *glContext = nullptr;
 #endif
-
 #if MBGL_USE_EGL
     EGLDisplay dpy;
     EGLContext glContext = nullptr;
     EGLConfig config;
 #endif
 
-#if MBGL_USE_GLX
-    Display *xDisplay = nullptr;
-    GLXFBConfig *fbConfigs = nullptr;
-    GLXContext glContext = nullptr;
-    GLXPbuffer glxPbuffer = 0;
-#endif
-
     std::function<void(MapChange)> mapChangeCallback;
-
 };
 
 } // namespace mbgl
