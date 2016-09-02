@@ -1034,6 +1034,11 @@ public:
     [super didMoveToSuperview];
 }
 
+- (CAEAGLLayer *)glLayer
+{
+    return (CAEAGLLayer *)_glView.layer;
+}
+
 - (void)sleepGL:(__unused NSNotification *)notification
 {
     MGLAssertIsMainThread();

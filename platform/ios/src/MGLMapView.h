@@ -3,6 +3,7 @@
 
 #import <UIKit/UIKit.h>
 #import <CoreLocation/CoreLocation.h>
+#import <QuartzCore/CAEAGLLayer.h>
 
 #import "MGLTypes.h"
 
@@ -1202,6 +1203,8 @@ IB_DESIGNABLE
 - (void)toggleDebug __attribute__((deprecated("Use -setDebugMask:.")));
 
 - (void)emptyMemoryCache __attribute__((deprecated));
+
+@property (nonatomic, readonly) CAEAGLLayer *glLayer;
 
 @end
 
