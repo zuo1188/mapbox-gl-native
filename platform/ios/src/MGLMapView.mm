@@ -437,6 +437,9 @@ public:
     _attributionButtonConstraints = [NSMutableArray array];
     [_attributionButton addObserver:self forKeyPath:@"hidden" options:NSKeyValueObservingOptionNew context:NULL];
 
+    UILongPressGestureRecognizer *attributionLongPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(showAttributionFromLongPress)];
+    [_attributionButton addGestureRecognizer:attributionLongPress];
+
     // setup compass
     //
     _compassView = [[UIImageView alloc] initWithImage:self.compassImage];
@@ -1668,9 +1671,21 @@ public:
 
 - (void)showAttribution
 {
+    [self showAttributionWithVersion:NO];
+}
+
+- (void)showAttributionFromLongPress
+{
+    [self showAttributionWithVersion:YES];
+}
+
+- (void)showAttributionWithVersion:(BOOL)showVersion
+{
+    NSString *title = NSLocalizedStringWithDefaultValue(@"SDK_NAME", nil, nil, @"Mapbox iOS SDK", @"Action sheet title");
+
     if ( ! self.attributionSheet)
     {
-        self.attributionSheet = [[UIActionSheet alloc] initWithTitle:NSLocalizedStringWithDefaultValue(@"SDK_NAME", nil, nil, @"Mapbox iOS SDK", @"Action sheet title")
+        self.attributionSheet = [[UIActionSheet alloc] initWithTitle:title
                                                             delegate:self
                                                    cancelButtonTitle:NSLocalizedStringWithDefaultValue(@"CANCEL", nil, nil, @"Cancel", @"")
                                               destructiveButtonTitle:nil
@@ -1680,9 +1695,16 @@ public:
                                  NSLocalizedStringWithDefaultValue(@"MAP_FEEDBACK", nil, nil, @"Improve This Map", @"Action in attribution sheet"),
                                  NSLocalizedStringWithDefaultValue(@"TELEMETRY_NAME", nil, nil, @"Mapbox Telemetry", @"Action in attribution sheet"),
                                  nil];
-
     }
-    
+
+    if (showVersion && [self.attributionSheet.title isEqualToString:title])
+    {
+        NSString *semanticVersion = [NSBundle mgl_frameworkInfoDictionary][@"MGLSemanticVersionString"];
+        NSString *shortVersion = [NSBundle mgl_frameworkInfoDictionary][@"CFBundleShortVersionString"];
+        NSString *sdkVersion = semanticVersion ?: shortVersion;
+        self.attributionSheet.title = [self.attributionSheet.title stringByAppendingFormat:@" %@", sdkVersion];
+    }
+
     [self.attributionSheet showFromRect:self.attributionButton.frame inView:self animated:YES];
 }
 
