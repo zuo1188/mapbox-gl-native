@@ -77,6 +77,7 @@ NS_ARRAY_OF(id <MGLAnnotation>) *MBXFlattenedShapes(NS_ARRAY_OF(id <MGLAnnotatio
     NSTimer *_timer;
     NSUInteger _index;
     CLLocationDirection _lastHeading;
+    NSDate *_lastHeadingUpdate;
 }
 
 #pragma mark Lifecycle
@@ -312,6 +313,8 @@ NS_ARRAY_OF(id <MGLAnnotation>) *MBXFlattenedShapes(NS_ARRAY_OF(id <MGLAnnotatio
     MGLPolyline *fullRoute = [self fullRoute];
     ProgressPolyline *progressRoute = [self progressRoute];
 
+    _lastHeadingUpdate = [NSDate date];
+
     MGLMapCamera *camera = [MGLMapCamera cameraLookingAtCenterCoordinate:fullRoute.coordinates[0]
                                                             fromDistance:500
                                                                    pitch:60
@@ -341,8 +344,11 @@ NS_ARRAY_OF(id <MGLAnnotation>) *MBXFlattenedShapes(NS_ARRAY_OF(id <MGLAnnotatio
                 CLLocationCoordinate2D coordinate = fullRoute.coordinates[_index];
                 CLLocationDirection heading = fmodf([self headingFromCoordinate:fullRoute.coordinates[(_index > 0 ? _index - 1 : 0)]
                                                                    toCoordinate:coordinate] + 90, 360);
-                if (fabs(heading - _lastHeading) < 90) heading = _lastHeading;
-                if (fabs(360 - heading - _lastHeading) < 90) heading = _lastHeading;
+                if ([[NSDate date] timeIntervalSinceDate:_lastHeadingUpdate] < 5) {
+                    heading = _lastHeading;
+                } else {
+                    _lastHeadingUpdate = [NSDate date];
+                }
                 MGLMapCamera *camera = [MGLMapCamera cameraLookingAtCenterCoordinate:coordinate
                                                                         fromDistance:500
                                                                                pitch:60
