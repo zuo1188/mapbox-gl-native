@@ -310,6 +310,7 @@ NS_ARRAY_OF(id <MGLAnnotation>) *MBXFlattenedShapes(NS_ARRAY_OF(id <MGLAnnotatio
 
 - (void)startHikeTour {
     MGLPolyline *fullRoute = [self fullRoute];
+    ProgressPolyline *progressRoute = [self progressRoute];
 
     MGLMapCamera *camera = [MGLMapCamera cameraLookingAtCenterCoordinate:fullRoute.coordinates[0]
                                                             fromDistance:500
@@ -324,12 +325,8 @@ NS_ARRAY_OF(id <MGLAnnotation>) *MBXFlattenedShapes(NS_ARRAY_OF(id <MGLAnnotatio
           completionHandler:^{
         _timer = [NSTimer timerWithTimeInterval:1/fps
                                       repeats:YES
-                                        block:^(NSTimer * _Nonnull timer) {
-            MGLPolyline *fullRoute = [self fullRoute];
+                                        block:^(NSTimer *timer) {
             if (_index < fullRoute.pointCount) {
-                CLLocationCoordinate2D coordinate = fullRoute.coordinates[_index];
-
-                ProgressPolyline *progressRoute = [self progressRoute];
                 CLLocationCoordinate2D *newPoints = (CLLocationCoordinate2D *)malloc(step * sizeof(CLLocationCoordinate2D));
                 for (NSUInteger i = 0; i < step; i++) {
                     if (_index + i < fullRoute.pointCount) {
@@ -341,6 +338,7 @@ NS_ARRAY_OF(id <MGLAnnotation>) *MBXFlattenedShapes(NS_ARRAY_OF(id <MGLAnnotatio
                 [progressRoute replaceCoordinatesInRange:NSMakeRange(progressRoute.pointCount, step) withCoordinates:newPoints];
                 free(newPoints);
 
+                CLLocationCoordinate2D coordinate = fullRoute.coordinates[_index];
                 CLLocationDirection heading = fmodf([self headingFromCoordinate:fullRoute.coordinates[(_index > 0 ? _index - 1 : 0)]
                                                                    toCoordinate:coordinate] + 90, 360);
                 if (fabs(heading - _lastHeading) < 90) heading = _lastHeading;
@@ -352,7 +350,7 @@ NS_ARRAY_OF(id <MGLAnnotation>) *MBXFlattenedShapes(NS_ARRAY_OF(id <MGLAnnotatio
                 _lastHeading = heading;
                 [self.mapView setCamera:camera
                            withDuration:0.25
-                animationTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionLinear]
+                animationTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut]
                       completionHandler:nil];
             } else {
                 [_timer invalidate];
