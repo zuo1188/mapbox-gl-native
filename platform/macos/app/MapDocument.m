@@ -322,55 +322,53 @@ NS_ARRAY_OF(id <MGLAnnotation>) *MBXFlattenedShapes(NS_ARRAY_OF(id <MGLAnnotatio
                withDuration:5
     animationTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseOut]
           completionHandler:^{
-              _timer = [NSTimer timerWithTimeInterval:1/fps
-                                              repeats:YES
-                                                block:^(NSTimer * _Nonnull timer) {
-                                                    MGLPolyline *fullRoute = [self fullRoute];
-                                                    if (_index < fullRoute.pointCount) {
-                                                        CLLocationCoordinate2D coordinate = fullRoute.coordinates[_index];
+        _timer = [NSTimer timerWithTimeInterval:1/fps
+                                      repeats:YES
+                                        block:^(NSTimer * _Nonnull timer) {
+            MGLPolyline *fullRoute = [self fullRoute];
+            if (_index < fullRoute.pointCount) {
+                CLLocationCoordinate2D coordinate = fullRoute.coordinates[_index];
 
-                                                        ProgressPolyline *progressRoute = [self progressRoute];
-                                                        CLLocationCoordinate2D *newPoints = (CLLocationCoordinate2D *)malloc(step * sizeof(CLLocationCoordinate2D));
-                                                        for (NSUInteger i = 0; i < step; i++) {
-                                                            if (_index + i < fullRoute.pointCount) {
-                                                                newPoints[i] = fullRoute.coordinates[_index + i];
-                                                            } else {
-                                                                newPoints[i] = fullRoute.coordinates[_index + i - 1];
-                                                            }
-                                                        }
-                                                        [progressRoute replaceCoordinatesInRange:NSMakeRange(progressRoute.pointCount, step) withCoordinates:newPoints];
-                                                        free(newPoints);
+                ProgressPolyline *progressRoute = [self progressRoute];
+                CLLocationCoordinate2D *newPoints = (CLLocationCoordinate2D *)malloc(step * sizeof(CLLocationCoordinate2D));
+                for (NSUInteger i = 0; i < step; i++) {
+                    if (_index + i < fullRoute.pointCount) {
+                        newPoints[i] = fullRoute.coordinates[_index + i];
+                    } else {
+                        newPoints[i] = fullRoute.coordinates[_index + i - 1];
+                    }
+                }
+                [progressRoute replaceCoordinatesInRange:NSMakeRange(progressRoute.pointCount, step) withCoordinates:newPoints];
+                free(newPoints);
 
-                                                        CLLocationDirection heading = fmodf([self headingFromCoordinate:fullRoute.coordinates[(_index > 0 ? _index - 1 : 0)]
-                                                                                                           toCoordinate:coordinate] + 90, 360);
-//                                                        NSLog(@"point heading: %f (normal: %f)", heading - 90, heading);
-                                                        if (fabs(heading - _lastHeading) < 90) heading = _lastHeading;
-                                                        if (fabs(360 - heading - _lastHeading) < 90) heading = _lastHeading;
-//                                                        NSLog(@"corrected: %f", heading);
-                                                        MGLMapCamera *camera = [MGLMapCamera cameraLookingAtCenterCoordinate:coordinate
-                                                                                                                fromDistance:500
-                                                                                                                       pitch:60
-                                                                                                                     heading:heading];
-                                                        _lastHeading = heading;
-                                                        [self.mapView setCamera:camera
-                                                                   withDuration:0.25
-                                                        animationTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionLinear]
-                                                              completionHandler:nil];
-                                                    } else {
-                                                        [_timer invalidate];
-                                                        _timer = nil;
-                                                        MGLMapCamera *camera = [MGLMapCamera cameraLookingAtCenterCoordinate:self.mapView.centerCoordinate
-                                                                                                                fromDistance:15000
-                                                                                                                       pitch:0
-                                                                                                                     heading:0];
-                                                        [self.mapView setCamera:camera
-                                                                   withDuration:5
-                                                        animationTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseOut]
-                                                              completionHandler:nil];
-                                                    }
-                                                    _index += step;
-                                                }];
-              [[NSRunLoop mainRunLoop] addTimer:_timer forMode:NSRunLoopCommonModes];
+                CLLocationDirection heading = fmodf([self headingFromCoordinate:fullRoute.coordinates[(_index > 0 ? _index - 1 : 0)]
+                                                                   toCoordinate:coordinate] + 90, 360);
+                if (fabs(heading - _lastHeading) < 90) heading = _lastHeading;
+                if (fabs(360 - heading - _lastHeading) < 90) heading = _lastHeading;
+                MGLMapCamera *camera = [MGLMapCamera cameraLookingAtCenterCoordinate:coordinate
+                                                                        fromDistance:500
+                                                                               pitch:60
+                                                                             heading:heading];
+                _lastHeading = heading;
+                [self.mapView setCamera:camera
+                           withDuration:0.25
+                animationTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionLinear]
+                      completionHandler:nil];
+            } else {
+                [_timer invalidate];
+                _timer = nil;
+                MGLMapCamera *camera = [MGLMapCamera cameraLookingAtCenterCoordinate:self.mapView.centerCoordinate
+                                                                        fromDistance:15000
+                                                                               pitch:0
+                                                                             heading:0];
+                [self.mapView setCamera:camera
+                           withDuration:5
+                animationTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseOut]
+                      completionHandler:nil];
+            }
+            _index += step;
+        }];
+        [[NSRunLoop mainRunLoop] addTimer:_timer forMode:NSRunLoopCommonModes];
     }];
 }
 
