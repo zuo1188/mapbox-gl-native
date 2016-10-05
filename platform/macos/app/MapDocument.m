@@ -4,6 +4,7 @@
 #import "DroppedPinAnnotation.h"
 
 #import <Mapbox/Mapbox.h>
+#import <QuartzCore/QuartzCore.h>
 
 static NSString * const MGLDroppedPinAnnotationImageIdentifier = @"dropped";
 
@@ -46,6 +47,12 @@ NS_ARRAY_OF(id <MGLAnnotation>) *MBXFlattenedShapes(NS_ARRAY_OF(id <MGLAnnotatio
     return flattenedShapes;
 }
 
+@interface ProgressPolyline : MGLPolyline
+@end
+
+@implementation ProgressPolyline
+@end
+
 @interface MapDocument () <NSWindowDelegate, NSSharingServicePickerDelegate, NSMenuDelegate, MGLMapViewDelegate>
 
 @property (weak) IBOutlet NSMenu *mapViewContextMenu;
@@ -66,6 +73,10 @@ NS_ARRAY_OF(id <MGLAnnotation>) *MBXFlattenedShapes(NS_ARRAY_OF(id <MGLAnnotatio
     BOOL _isTouringWorld;
     BOOL _isShowingPolygonAndPolylineAnnotations;
     BOOL _isShowingAnimatedAnnotation;
+
+    NSTimer *_timer;
+    NSUInteger _index;
+    CLLocationDirection _lastHeading;
 }
 
 #pragma mark Lifecycle
@@ -257,8 +268,138 @@ NS_ARRAY_OF(id <MGLAnnotation>) *MBXFlattenedShapes(NS_ARRAY_OF(id <MGLAnnotatio
     NSValue *coordinateValue = [NSValue valueWithMGLCoordinate:self.mapView.centerCoordinate];
     self.displayName = [[NSValueTransformer valueTransformerForName:@"LocationCoordinate2DTransformer"]
                         transformedValue:coordinateValue];
+
+    [self performSelector:@selector(addHike) withObject:nil afterDelay:0];
 }
 
+- (void)addHike {
+    self.mapView.styleURL = [MGLStyle satelliteStreetsStyleURLWithVersion:MGLStyleDefaultVersion];
+
+    NSDictionary *hike = [NSJSONSerialization JSONObjectWithData:
+                             [NSData dataWithContentsOfFile:
+                                 [[NSBundle mainBundle] pathForResource:@"polyline"
+                                                                 ofType:@"geojson"]]
+                                                         options:0
+                                                           error:nil];
+
+    NSArray *hikeCoordinatePairs = hike[@"features"][0][@"geometry"][@"coordinates"];
+
+    CLLocationCoordinate2D *polylineCoordinates = (CLLocationCoordinate2D *)malloc([hikeCoordinatePairs count] * sizeof(CLLocationCoordinate2D));
+    for (NSUInteger i = 0; i < [hikeCoordinatePairs count]; i++) {
+        polylineCoordinates[i] = CLLocationCoordinate2DMake([hikeCoordinatePairs[i][1] doubleValue], [hikeCoordinatePairs[i][0] doubleValue]);
+    }
+    MGLPolyline *fullRoute = [MGLPolyline polylineWithCoordinates:polylineCoordinates count:[hikeCoordinatePairs count]];
+    [self.mapView addAnnotation:fullRoute];
+
+    CLLocationCoordinate2D *progressCoordinates = (CLLocationCoordinate2D *)malloc(1 * sizeof(CLLocationCoordinate2D));
+    progressCoordinates[0] = polylineCoordinates[0];
+    ProgressPolyline *progressRoute = [ProgressPolyline polylineWithCoordinates:progressCoordinates count:1];
+    [self.mapView addAnnotation:progressRoute];
+
+    free(polylineCoordinates);
+    free(progressCoordinates);
+
+    MGLMapCamera *camera = [MGLMapCamera cameraLookingAtCenterCoordinate:fullRoute.coordinate
+                                                            fromDistance:15000
+                                                                   pitch:0
+                                                                 heading:0];
+    self.mapView.camera = camera;
+
+    [self performSelector:@selector(startHikeTour) withObject:nil afterDelay:2];
+}
+
+- (void)startHikeTour {
+    MGLPolyline *fullRoute = [self fullRoute];
+
+    MGLMapCamera *camera = [MGLMapCamera cameraLookingAtCenterCoordinate:fullRoute.coordinates[0]
+                                                            fromDistance:500
+                                                                   pitch:60
+                                                                 heading:0];
+
+    CGFloat fps = 10;
+    NSUInteger step = 5;
+    [self.mapView setCamera:camera
+               withDuration:5
+    animationTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseOut]
+          completionHandler:^{
+              _timer = [NSTimer timerWithTimeInterval:1/fps
+                                              repeats:YES
+                                                block:^(NSTimer * _Nonnull timer) {
+                                                    MGLPolyline *fullRoute = [self fullRoute];
+                                                    if (_index < fullRoute.pointCount) {
+                                                        CLLocationCoordinate2D coordinate = fullRoute.coordinates[_index];
+
+                                                        ProgressPolyline *progressRoute = [self progressRoute];
+                                                        CLLocationCoordinate2D *newPoints = (CLLocationCoordinate2D *)malloc(step * sizeof(CLLocationCoordinate2D));
+                                                        for (NSUInteger i = 0; i < step; i++) {
+                                                            if (_index + i < fullRoute.pointCount) {
+                                                                newPoints[i] = fullRoute.coordinates[_index + i];
+                                                            } else {
+                                                                newPoints[i] = fullRoute.coordinates[_index + i - 1];
+                                                            }
+                                                        }
+                                                        [progressRoute replaceCoordinatesInRange:NSMakeRange(progressRoute.pointCount, step) withCoordinates:newPoints];
+                                                        free(newPoints);
+
+                                                        CLLocationDirection heading = fmodf([self headingFromCoordinate:fullRoute.coordinates[(_index > 0 ? _index - 1 : 0)]
+                                                                                                           toCoordinate:coordinate] + 90, 360);
+//                                                        NSLog(@"point heading: %f (normal: %f)", heading - 90, heading);
+                                                        if (fabs(heading - _lastHeading) < 90) heading = _lastHeading;
+                                                        if (fabs(360 - heading - _lastHeading) < 90) heading = _lastHeading;
+//                                                        NSLog(@"corrected: %f", heading);
+                                                        MGLMapCamera *camera = [MGLMapCamera cameraLookingAtCenterCoordinate:coordinate
+                                                                                                                fromDistance:500
+                                                                                                                       pitch:60
+                                                                                                                     heading:heading];
+                                                        _lastHeading = heading;
+                                                        [self.mapView setCamera:camera
+                                                                   withDuration:0.25
+                                                        animationTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionLinear]
+                                                              completionHandler:nil];
+                                                    } else {
+                                                        [_timer invalidate];
+                                                        _timer = nil;
+                                                        MGLMapCamera *camera = [MGLMapCamera cameraLookingAtCenterCoordinate:self.mapView.centerCoordinate
+                                                                                                                fromDistance:15000
+                                                                                                                       pitch:0
+                                                                                                                     heading:0];
+                                                        [self.mapView setCamera:camera
+                                                                   withDuration:5
+                                                        animationTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseOut]
+                                                              completionHandler:nil];
+                                                    }
+                                                    _index += step;
+                                                }];
+              [[NSRunLoop mainRunLoop] addTimer:_timer forMode:NSRunLoopCommonModes];
+    }];
+}
+
+- (MGLPolyline *)fullRoute {
+    for (MGLMultiPoint *route in self.mapView.annotations) {
+        if ([route isMemberOfClass:[MGLPolyline class]]) {
+            return (MGLPolyline *)route;
+        }
+    }
+    return nil;
+}
+
+- (ProgressPolyline *)progressRoute {
+    for (MGLMultiPoint *route in self.mapView.annotations) {
+        if ([route isMemberOfClass:[ProgressPolyline class]]) {
+            return (ProgressPolyline *)route;
+        }
+    }
+    return nil;
+}
+
+- (CLLocationDirection)headingFromCoordinate:(CLLocationCoordinate2D)c1 toCoordinate:(CLLocationCoordinate2D)c2 {
+    float tLat = MGLRadiansFromDegrees(c2.latitude);
+    float tLng = MGLRadiansFromDegrees(c2.longitude);
+    float fLat = MGLRadiansFromDegrees(c1.latitude);
+    float fLng = MGLRadiansFromDegrees(c1.longitude);
+    float brng = atan2(sin(tLng - fLng) * cos(tLat), cos(fLat) * sin(tLat) - sin(fLat) * cos(tLat) * cos(tLng - fLng));
+    return (CLLocationDirection)fmodf((MGLDegreesFromRadians(brng) + 360), 360);
+}
 #pragma mark Debug methods
 
 - (IBAction)toggleTileBoundaries:(id)sender {
@@ -827,7 +968,15 @@ NS_ARRAY_OF(id <MGLAnnotation>) *MBXFlattenedShapes(NS_ARRAY_OF(id <MGLAnnotatio
 }
 
 - (CGFloat)mapView:(MGLMapView *)mapView alphaForShapeAnnotation:(MGLShape *)annotation {
-    return 0.8;
+    return ([annotation isKindOfClass:[ProgressPolyline class]] ? 0.75: 0.5);
+}
+
+- (NSColor *)mapView:(MGLMapView *)mapView strokeColorForShapeAnnotation:(MGLShape *)annotation {
+    return ([annotation isKindOfClass:[ProgressPolyline class]] ? [NSColor yellowColor] : [NSColor darkGrayColor]);
+}
+
+- (CGFloat)mapView:(MGLMapView *)mapView lineWidthForPolylineAnnotation:(MGLPolyline *)annotation {
+    return ([annotation isKindOfClass:[ProgressPolyline class]] ? 6 : 8);
 }
 
 @end

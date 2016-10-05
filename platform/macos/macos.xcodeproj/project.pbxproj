@@ -181,6 +181,7 @@
 		DAED385F1D62CED700D7640F /* NSURL+MGLAdditions.h in Headers */ = {isa = PBXBuildFile; fileRef = DAED385D1D62CED700D7640F /* NSURL+MGLAdditions.h */; };
 		DAED38601D62CED700D7640F /* NSURL+MGLAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = DAED385E1D62CED700D7640F /* NSURL+MGLAdditions.m */; };
 		DD58A4C91D822C6700E1F038 /* MGLExpressionTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = DD58A4C71D822C6200E1F038 /* MGLExpressionTests.mm */; };
+		DD5D1EA91DA579A80064B213 /* polyline.geojson in Resources */ = {isa = PBXBuildFile; fileRef = DD5D1EA81DA579A80064B213 /* polyline.geojson */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -414,6 +415,7 @@
 		DAED385D1D62CED700D7640F /* NSURL+MGLAdditions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSURL+MGLAdditions.h"; sourceTree = "<group>"; };
 		DAED385E1D62CED700D7640F /* NSURL+MGLAdditions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSURL+MGLAdditions.m"; sourceTree = "<group>"; };
 		DD58A4C71D822C6200E1F038 /* MGLExpressionTests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = MGLExpressionTests.mm; path = ../../darwin/test/MGLExpressionTests.mm; sourceTree = "<group>"; };
+		DD5D1EA81DA579A80064B213 /* polyline.geojson */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = polyline.geojson; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -570,6 +572,7 @@
 				DA839EA31CC2E3400062CAFB /* MainMenu.xib */,
 				358EB3AE1D61F0DB00E46D9C /* amsterdam.geojson */,
 				DA5589761D320C41006B7F64 /* wms.json */,
+				DD5D1EA81DA579A80064B213 /* polyline.geojson */,
 				DAE6C2E11CC304F900DB3429 /* Credits.rtf */,
 				DA839EA61CC2E3400062CAFB /* Info.plist */,
 				DA839E981CC2E3400062CAFB /* Supporting Files */,
@@ -1058,6 +1061,7 @@
 				353BAEF81D6463B8009A8DA9 /* amsterdam.geojson in Resources */,
 				DA839EA51CC2E3400062CAFB /* MainMenu.xib in Resources */,
 				DA5589771D320C41006B7F64 /* wms.json in Resources */,
+				DD5D1EA91DA579A80064B213 /* polyline.geojson in Resources */,
 				DAE6C2E21CC304F900DB3429 /* Credits.rtf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
