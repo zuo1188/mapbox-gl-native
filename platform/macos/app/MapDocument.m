@@ -402,6 +402,7 @@ NS_ARRAY_OF(id <MGLAnnotation>) *MBXFlattenedShapes(NS_ARRAY_OF(id <MGLAnnotatio
     float brng = atan2(sin(tLng - fLng) * cos(tLat), cos(fLat) * sin(tLat) - sin(fLat) * cos(tLat) * cos(tLng - fLng));
     return (CLLocationDirection)fmodf((MGLDegreesFromRadians(brng) + 360), 360);
 }
+
 #pragma mark Debug methods
 
 - (IBAction)toggleTileBoundaries:(id)sender {
