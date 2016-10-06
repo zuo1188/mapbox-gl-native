@@ -141,6 +141,11 @@ typedef NS_ENUM(NSInteger, MBXSettingsMiscellaneousRows) {
 
     self.debugLoggingEnabled = [[NSUserDefaults standardUserDefaults] boolForKey:@"MGLMapboxMetricsDebugLoggingEnabled"];
 
+    self.navigationController.navigationBarHidden = YES;
+    self.mapView.logoView.hidden = YES;
+    self.mapView.attributionButton.hidden = YES;
+    self.mapView.compassView.hidden = YES;
+
     [self performSelector:@selector(addHike) withObject:nil afterDelay:0];
 }
 
@@ -197,6 +202,7 @@ typedef NS_ENUM(NSInteger, MBXSettingsMiscellaneousRows) {
                withDuration:5
     animationTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseOut]
           completionHandler:^{
+//        return;
         _timer = [NSTimer timerWithTimeInterval:1/fps
                                         repeats:YES
                                           block:^(NSTimer *timer) {
@@ -1231,12 +1237,12 @@ typedef NS_ENUM(NSInteger, MBXSettingsMiscellaneousRows) {
 {
     if ([annotation isKindOfClass:[ProgressPolyline class]]) return 0.75;
     if ([annotation isKindOfClass:[MGLPolygon class]]) return 0.5;
-    return 1.0;
+    return 0.5;
 }
 
 - (UIColor *)mapView:(__unused MGLMapView *)mapView strokeColorForShapeAnnotation:(MGLShape *)annotation
 {
-    if ([annotation isKindOfClass:[ProgressPolyline class]]) return [UIColor yellowColor];
+    if ([annotation isKindOfClass:[ProgressPolyline class]]) return [UIColor redColor];
     if ([annotation isKindOfClass:[MGLPolyline class]]) return [UIColor darkGrayColor];
     return [UIColor blackColor];
 }
