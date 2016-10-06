@@ -404,6 +404,13 @@
 		DAED38641D62D0FC00D7640F /* NSURL+MGLAdditions.h in Headers */ = {isa = PBXBuildFile; fileRef = DAED38611D62D0FC00D7640F /* NSURL+MGLAdditions.h */; };
 		DAED38651D62D0FC00D7640F /* NSURL+MGLAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = DAED38621D62D0FC00D7640F /* NSURL+MGLAdditions.m */; };
 		DAED38661D62D0FC00D7640F /* NSURL+MGLAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = DAED38621D62D0FC00D7640F /* NSURL+MGLAdditions.m */; };
+		DD01C6661DA6DC0D00ABCAC7 /* back.jpg in Resources */ = {isa = PBXBuildFile; fileRef = DD01C65F1DA6DC0D00ABCAC7 /* back.jpg */; };
+		DD01C6671DA6DC0D00ABCAC7 /* bottom.jpg in Resources */ = {isa = PBXBuildFile; fileRef = DD01C6601DA6DC0D00ABCAC7 /* bottom.jpg */; };
+		DD01C6681DA6DC0D00ABCAC7 /* Envmap.txt in Resources */ = {isa = PBXBuildFile; fileRef = DD01C6611DA6DC0D00ABCAC7 /* Envmap.txt */; };
+		DD01C6691DA6DC0D00ABCAC7 /* front.jpg in Resources */ = {isa = PBXBuildFile; fileRef = DD01C6621DA6DC0D00ABCAC7 /* front.jpg */; };
+		DD01C66A1DA6DC0D00ABCAC7 /* left.jpg in Resources */ = {isa = PBXBuildFile; fileRef = DD01C6631DA6DC0D00ABCAC7 /* left.jpg */; };
+		DD01C66B1DA6DC0D00ABCAC7 /* right.jpg in Resources */ = {isa = PBXBuildFile; fileRef = DD01C6641DA6DC0D00ABCAC7 /* right.jpg */; };
+		DD01C66C1DA6DC0D00ABCAC7 /* top.jpg in Resources */ = {isa = PBXBuildFile; fileRef = DD01C6651DA6DC0D00ABCAC7 /* top.jpg */; };
 		DD4823751D94AE6C00EB71B7 /* fill_filter_style.json in Resources */ = {isa = PBXBuildFile; fileRef = DD4823721D94AE6C00EB71B7 /* fill_filter_style.json */; };
 		DD4823761D94AE6C00EB71B7 /* line_filter_style.json in Resources */ = {isa = PBXBuildFile; fileRef = DD4823731D94AE6C00EB71B7 /* line_filter_style.json */; };
 		DD4823771D94AE6C00EB71B7 /* numeric_filter_style.json in Resources */ = {isa = PBXBuildFile; fileRef = DD4823741D94AE6C00EB71B7 /* numeric_filter_style.json */; };
@@ -761,6 +768,13 @@
 		DAD165771CF4CDFF001FF4B9 /* MGLShapeCollection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MGLShapeCollection.m; sourceTree = "<group>"; };
 		DAED38611D62D0FC00D7640F /* NSURL+MGLAdditions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSURL+MGLAdditions.h"; sourceTree = "<group>"; };
 		DAED38621D62D0FC00D7640F /* NSURL+MGLAdditions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSURL+MGLAdditions.m"; sourceTree = "<group>"; };
+		DD01C65F1DA6DC0D00ABCAC7 /* back.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = back.jpg; sourceTree = "<group>"; };
+		DD01C6601DA6DC0D00ABCAC7 /* bottom.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = bottom.jpg; sourceTree = "<group>"; };
+		DD01C6611DA6DC0D00ABCAC7 /* Envmap.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Envmap.txt; sourceTree = "<group>"; };
+		DD01C6621DA6DC0D00ABCAC7 /* front.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = front.jpg; sourceTree = "<group>"; };
+		DD01C6631DA6DC0D00ABCAC7 /* left.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = left.jpg; sourceTree = "<group>"; };
+		DD01C6641DA6DC0D00ABCAC7 /* right.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = right.jpg; sourceTree = "<group>"; };
+		DD01C6651DA6DC0D00ABCAC7 /* top.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = top.jpg; sourceTree = "<group>"; };
 		DD4823721D94AE6C00EB71B7 /* fill_filter_style.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = fill_filter_style.json; sourceTree = "<group>"; };
 		DD4823731D94AE6C00EB71B7 /* line_filter_style.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = line_filter_style.json; sourceTree = "<group>"; };
 		DD4823741D94AE6C00EB71B7 /* numeric_filter_style.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = numeric_filter_style.json; sourceTree = "<group>"; };
@@ -1005,6 +1019,7 @@
 				DD4823721D94AE6C00EB71B7 /* fill_filter_style.json */,
 				DD4823731D94AE6C00EB71B7 /* line_filter_style.json */,
 				DD4823741D94AE6C00EB71B7 /* numeric_filter_style.json */,
+				DD01C65E1DA6DC0D00ABCAC7 /* Envmap */,
 				DA1DC95E1CB6C1C2006E619F /* Info.plist */,
 				DA1DC99C1CB6E076006E619F /* Default-568h@2x.png */,
 				DA1DC94D1CB6C1C2006E619F /* Supporting Files */,
@@ -1381,6 +1396,20 @@
 				DA8848491CBAFB9800AB86E3 /* MGLMapboxEvents.m */,
 			);
 			name = Telemetry;
+			sourceTree = "<group>";
+		};
+		DD01C65E1DA6DC0D00ABCAC7 /* Envmap */ = {
+			isa = PBXGroup;
+			children = (
+				DD01C65F1DA6DC0D00ABCAC7 /* back.jpg */,
+				DD01C6601DA6DC0D00ABCAC7 /* bottom.jpg */,
+				DD01C6611DA6DC0D00ABCAC7 /* Envmap.txt */,
+				DD01C6621DA6DC0D00ABCAC7 /* front.jpg */,
+				DD01C6631DA6DC0D00ABCAC7 /* left.jpg */,
+				DD01C6641DA6DC0D00ABCAC7 /* right.jpg */,
+				DD01C6651DA6DC0D00ABCAC7 /* top.jpg */,
+			);
+			path = Envmap;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1768,14 +1797,21 @@
 			buildActionMask = 2147483647;
 			files = (
 				DA25D5CD1CCDA11500607828 /* Settings.bundle in Resources */,
+				DD01C6691DA6DC0D00ABCAC7 /* front.jpg in Resources */,
 				DD4823771D94AE6C00EB71B7 /* numeric_filter_style.json in Resources */,
 				DA1DC9701CB6C6CE006E619F /* points.geojson in Resources */,
 				353BAEF61D646370009A8DA9 /* amsterdam.geojson in Resources */,
+				DD01C6661DA6DC0D00ABCAC7 /* back.jpg in Resources */,
 				DA1DC9711CB6C6CE006E619F /* polyline.geojson in Resources */,
 				DD4823761D94AE6C00EB71B7 /* line_filter_style.json in Resources */,
 				DA1DC99D1CB6E076006E619F /* Default-568h@2x.png in Resources */,
+				DD01C6681DA6DC0D00ABCAC7 /* Envmap.txt in Resources */,
+				DD01C66C1DA6DC0D00ABCAC7 /* top.jpg in Resources */,
 				DA821D071CCC6D59007508D4 /* Main.storyboard in Resources */,
+				DD01C66A1DA6DC0D00ABCAC7 /* left.jpg in Resources */,
+				DD01C66B1DA6DC0D00ABCAC7 /* right.jpg in Resources */,
 				DA1DC9731CB6C6CE006E619F /* threestates.geojson in Resources */,
+				DD01C6671DA6DC0D00ABCAC7 /* bottom.jpg in Resources */,
 				DA821D061CCC6D59007508D4 /* LaunchScreen.storyboard in Resources */,
 				DD4823751D94AE6C00EB71B7 /* fill_filter_style.json in Resources */,
 				DA1DC99F1CB6E088006E619F /* Assets.xcassets in Resources */,

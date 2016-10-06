@@ -9,6 +9,7 @@
 #import "MGLFillStyleLayer.h"
 
 #import <Mapbox/Mapbox.h>
+#import <SceneKit/SceneKit.h>
 
 #import <objc/runtime.h>
 
@@ -92,6 +93,12 @@ typedef NS_ENUM(NSInteger, MBXSettingsMiscellaneousRows) {
 @end
 
 @implementation ProgressPolyline
+@end
+
+@interface ProgressAnnotation : MGLPointAnnotation
+@end
+
+@implementation ProgressAnnotation
 @end
 
 @interface MBXViewController () <UITableViewDelegate,
@@ -185,6 +192,13 @@ typedef NS_ENUM(NSInteger, MBXSettingsMiscellaneousRows) {
     [self performSelector:@selector(startHikeTour) withObject:nil afterDelay:2];
 }
 
+- (void)addTrophyAtCoordinate:(CLLocationCoordinate2D)coordinate
+{
+    ProgressAnnotation *trophy = [ProgressAnnotation new];
+    trophy.coordinate = coordinate;
+    [self.mapView addAnnotation:trophy];
+}
+
 - (void)startHikeTour {
     MGLPolyline *fullRoute = [self fullRoute];
     ProgressPolyline *progressRoute = [self progressRoute];
@@ -219,6 +233,12 @@ typedef NS_ENUM(NSInteger, MBXSettingsMiscellaneousRows) {
                 free(newPoints);
 
                 CLLocationCoordinate2D coordinate = fullRoute.coordinates[_index];
+
+                if ((_index > 0 && _index % 500 == 0) || (_index == fullRoute.pointCount - 1))
+                {
+                    [self addTrophyAtCoordinate:coordinate];
+                }
+                
                 CLLocationDirection heading = fmodf([self headingFromCoordinate:fullRoute.coordinates[(_index > 0 ? _index - 1 : 0)]
                                                                    toCoordinate:coordinate] + 90, 360);
                 if ([[NSDate date] timeIntervalSinceDate:_lastHeadingUpdate] < 5) {
@@ -1119,6 +1139,122 @@ typedef NS_ENUM(NSInteger, MBXSettingsMiscellaneousRows) {
 
 - (MGLAnnotationView *)mapView:(MGLMapView *)mapView viewForAnnotation:(id<MGLAnnotation>)annotation
 {
+    if ([annotation isKindOfClass:[ProgressAnnotation class]])
+    {
+        MGLAnnotationView *view = [[MGLAnnotationView alloc] initWithReuseIdentifier:@"Trophy"];
+        view.scalesWithViewingDistance = NO;
+        view.frame = CGRectMake(0, 0, 40, 40);
+
+//        view.backgroundColor = [[UIColor orangeColor] colorWithAlphaComponent:0.5];
+//        view.layer.cornerRadius = view.frame.size.width / 2;
+//        view.layer.borderColor = [[[UIColor whiteColor] colorWithAlphaComponent:0.5] CGColor];
+//        view.layer.borderWidth = 2;
+
+        UIGraphicsBeginImageContextWithOptions(view.bounds.size, NO, [[UIScreen mainScreen] scale]);
+        CGContextRef context = UIGraphicsGetCurrentContext();
+
+        CGContextMoveToPoint(context, 0, 0);
+        CGContextAddLineToPoint(context, 70, 0);
+        CGContextAddLineToPoint(context, 70, 10);
+        CGContextAddLineToPoint(context, 60, 10);
+        CGContextAddArc(context, 40, 10, 20, MGLRadiansFromDegrees(0), MGLRadiansFromDegrees(90), 0);
+        CGContextAddLineToPoint(context, 40, 30);
+        CGContextAddLineToPoint(context, 40, 60);
+        CGContextAddLineToPoint(context, 50, 60);
+        CGContextAddLineToPoint(context, 50, 70);
+        CGContextAddLineToPoint(context, 20, 70);
+        CGContextAddLineToPoint(context, 20, 60);
+        CGContextAddLineToPoint(context, 30, 60);
+        CGContextAddLineToPoint(context, 30, 30);
+        CGContextAddArc(context, 30, 10, 20, MGLRadiansFromDegrees(90), MGLRadiansFromDegrees(180), 0);
+        CGContextAddLineToPoint(context, 10, 10);
+        CGContextAddLineToPoint(context, 0, 10);
+        CGContextAddLineToPoint(context, 0, 0);
+
+        CGContextScaleCTM(context, 1, -1);
+
+        CGPathRef path = CGContextCopyPath(context);
+        UIBezierPath *bezierPath = [UIBezierPath bezierPathWithCGPath:path];
+        CGPathRelease(path);
+
+//        CGContextSetStrokeColorWithColor(context, [[UIColor orangeColor] CGColor]);
+//        CGContextStrokePath(context);
+
+
+
+//        UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
+        UIGraphicsEndImageContext();
+//        view.backgroundColor = [UIColor colorWithPatternImage:image];
+
+        SCNView *sceneView = [[SCNView alloc] initWithFrame:view.bounds options:nil];
+        sceneView.backgroundColor = [UIColor clearColor];
+        sceneView.allowsCameraControl = YES;
+        [view addSubview:sceneView];
+
+        SCNScene *scene = [SCNScene scene];
+        sceneView.scene = scene;
+
+//        SCNSphere *sphere = [SCNSphere sphereWithRadius:0.5];
+//        sphere.firstMaterial.diffuse.contents = [UIColor redColor];
+
+        SCNShape *trophy = [SCNShape shapeWithPath:bezierPath extrusionDepth:20];
+//        trophy.firstMaterial.lightingModelName = SCNLightingModelPhysicallyBased;
+//        trophy.firstMaterial.diffuse.contents = [UIColor colorWithRed:224.f/255.f green:205.f/255.f blue:100.f/255.f alpha:1];
+//        trophy.firstMaterial.metalness.contents = [UIColor whiteColor];
+//        trophy.firstMaterial.roughness.contents = [UIColor grayColor];
+        SCNMaterial *material = [SCNMaterial material];
+        material.diffuse.contents = [UIColor blackColor];
+        NSArray *mapArray = @[
+            [UIImage imageNamed:@"right.jpg"],
+            [UIImage imageNamed:@"left.jpg"],
+            [UIImage imageNamed:@"top.jpg"],
+            [UIImage imageNamed:@"bottom.jpg"],
+            [UIImage imageNamed:@"back.jpg"],
+            [UIImage imageNamed:@"front.jpg"]
+        ];
+        material.reflective.contents = mapArray;
+        material.specular.contents = [UIColor colorWithRed:224.f/255.f green:205.f/255.f blue:100.f/255.f alpha:1];
+        material.shininess = 75;
+        trophy.materials = @[material];
+        trophy.chamferMode = SCNChamferModeBoth;
+        trophy.chamferRadius = 2;
+
+        SCNNode *node = [SCNNode nodeWithGeometry:trophy];
+//        SCNNode *node = [SCNNode nodeWithGeometry:sphere];
+        node.pivot = SCNMatrix4MakeTranslation(35, 1, 1);
+        node.rotation = SCNVector4Make(0, 1, 0, MGLRadiansFromDegrees(10));
+//        node.position = SCNVector3Make(0, 0, -1000);
+        [scene.rootNode addChildNode:node];
+
+        node.opacity = 0;
+        [SCNTransaction begin];
+        [SCNTransaction setAnimationDuration:1];
+        node.opacity = 1;
+        [SCNTransaction commit];
+
+//        SCNCamera *camera = [SCNCamera camera];
+//        SCNNode *cameraNode = [SCNNode node];
+//        cameraNode.camera = camera;
+//        cameraNode.position = SCNVector3Make(0, 0, 110);
+//        [scene.rootNode addChildNode:cameraNode];
+
+        SCNNode *lightNode = [SCNNode node];
+        lightNode.light = [SCNLight light];
+        lightNode.light.type = SCNLightTypeOmni;
+        lightNode.position = SCNVector3Make(200, 50, 0);
+        [scene.rootNode addChildNode:lightNode];
+
+        SCNNode *ambientLightNode = [SCNNode node];
+        ambientLightNode.light = [SCNLight light];
+        ambientLightNode.light.type = SCNLightTypeAmbient;
+        ambientLightNode.light.color = [UIColor whiteColor];
+        [scene.rootNode addChildNode:ambientLightNode];
+
+        [self performSelector:@selector(animateTrophy) withObject:nil afterDelay:0.5];
+
+        return view;
+    }
+
     if (annotation == mapView.userLocation)
     {
         if (_customUserLocationAnnnotationEnabled)
@@ -1159,6 +1295,34 @@ typedef NS_ENUM(NSInteger, MBXSettingsMiscellaneousRows) {
         annotationView.backgroundColor = [UIColor orangeColor];
     }
     return annotationView;
+}
+
+- (void)animateTrophy
+{
+    for (id <MGLAnnotation> annotation in self.mapView.annotations)
+    {
+        if ([annotation isKindOfClass:[MGLPointAnnotation class]])
+        {
+            SCNNode *node = [[[[(SCNView *)([[[self.mapView viewForAnnotation:annotation] subviews] firstObject]) scene] rootNode] childNodes] firstObject];
+
+            [SCNTransaction begin];
+            [SCNTransaction setAnimationDuration:2];
+            [SCNTransaction setAnimationTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseOut]];
+            node.rotation = SCNVector4Make(0, 1, 0, MGLRadiansFromDegrees(360 * 4) + node.rotation.w);
+            [SCNTransaction setCompletionBlock:^
+            {
+                [SCNTransaction begin];
+                [SCNTransaction setAnimationDuration:1];
+                node.opacity = 0;
+                [SCNTransaction setCompletionBlock:^
+                {
+                    [self.mapView removeAnnotation:annotation];
+                }];
+                [SCNTransaction commit];
+            }];
+            [SCNTransaction commit];
+        }
+    }
 }
 
 - (MGLAnnotationImage *)mapView:(MGLMapView * __nonnull)mapView imageForAnnotation:(id <MGLAnnotation> __nonnull)annotation
