@@ -244,13 +244,12 @@ jni::jobject* std_vector_string_to_jobject(JNIEnv *env, std::vector<std::string>
     return jlist;
 }
 
-jni::jarray<jlong>* std_vector_uint_to_jobject(JNIEnv *env, std::vector<uint32_t> vector) {
+jni::jarray<jlong>* std_vector_uint_to_jobject(JNIEnv *env, const std::vector<uint32_t>& vector) {
     jni::jarray<jlong>& jarray = jni::NewArray<jlong>(*env, vector.size());
 
     std::vector<jlong> v;
-    for (const uint32_t& id : vector) {
-        v.push_back(id);
-    }
+    v.reserve(vector.size());
+    std::move(vector.begin(), vector.end(), std::back_inserter(v));
 
     jni::SetArrayRegion(*env, jarray, 0, v);
 
@@ -513,7 +512,7 @@ jdoubleArray nativeGetCameraValues(JNIEnv *env, jni::jobject* obj, jlong nativeM
     jdouble buf[5];
     buf[0] = latLng.latitude;
     buf[1] = latLng.longitude;
-    buf[2] = nativeMapView->getMap().getBearing();
+    buf[2] = -(nativeMapView->getMap().getBearing()-360);
     buf[3] = nativeMapView->getMap().getPitch();
     buf[4] = nativeMapView->getMap().getZoom();
     env->SetDoubleArrayRegion(output, start, leng, buf);
@@ -684,7 +683,7 @@ jni::jarray<jlong>* nativeAddMarkers(JNIEnv *env, jni::jobject* obj, jlong nativ
     NullCheck(*env, jarray);
     std::size_t len = jni::GetArrayLength(*env, *jarray);
 
-    std::vector<mbgl::AnnotationID> ids;
+    mbgl::AnnotationIDs ids;
     ids.reserve(len);
 
     for (std::size_t i = 0; i < len; i++) {
@@ -755,7 +754,7 @@ jni::jarray<jlong>* nativeAddPolylines(JNIEnv *env, jni::jobject* obj, jlong nat
     NullCheck(*env, jarray);
     std::size_t len = jni::GetArrayLength(*env, *jarray);
 
-    std::vector<mbgl::AnnotationID> ids;
+    mbgl::AnnotationIDs ids;
     ids.reserve(len);
 
     for (std::size_t i = 0; i < len; i++) {
@@ -782,7 +781,7 @@ jni::jarray<jlong>* nativeAddPolygons(JNIEnv *env, jni::jobject* obj, jlong nati
     NullCheck(*env, jarray);
     std::size_t len = jni::GetArrayLength(*env, *jarray);
 
-    std::vector<mbgl::AnnotationID> ids;
+    mbgl::AnnotationIDs ids;
     ids.reserve(len);
 
     for (std::size_t i = 0; i < len; i++) {
@@ -860,10 +859,9 @@ jni::jarray<jlong>* nativeQueryPointAnnotations(JNIEnv *env, jni::jobject* obj, 
     };
 
     // Assume only points for now
-    std::vector<uint32_t> annotations = nativeMapView->getMap().queryPointAnnotations(
-        box);
+    mbgl::AnnotationIDs ids = nativeMapView->getMap().queryPointAnnotations(box);
 
-    return std_vector_uint_to_jobject(env, annotations);
+    return std_vector_uint_to_jobject(env, ids);
 }
 
 void nativeAddAnnotationIcon(JNIEnv *env, jni::jobject* obj, jlong nativeMapViewPtr,
@@ -1059,12 +1057,12 @@ void nativeJumpTo(JNIEnv *env, jni::jobject* obj, jlong nativeMapViewPtr, jdoubl
 
     mbgl::CameraOptions options;
     if (angle != -1) {
-        options.angle = angle;
+        options.angle = angle * M_PI / 180;
     }
     options.center = mbgl::LatLng(latitude, longitude);
     options.padding = nativeMapView->getInsets();
     if (pitch != -1) {
-        options.pitch = pitch;
+        options.pitch = pitch * M_PI / 180;
     }
     if (zoom != -1) {
         options.zoom = zoom;
@@ -1079,12 +1077,12 @@ void nativeEaseTo(JNIEnv *env, jni::jobject* obj, jlong nativeMapViewPtr, jdoubl
 
     mbgl::CameraOptions cameraOptions;
     if (angle != -1) {
-        cameraOptions.angle = angle;
+        cameraOptions.angle = angle * M_PI / 180;
     }
     cameraOptions.center = mbgl::LatLng(latitude, longitude);
     cameraOptions.padding = nativeMapView->getInsets();
     if (pitch != -1) {
-        cameraOptions.pitch = pitch;
+        cameraOptions.pitch = pitch * M_PI / 180;
     }
     if (zoom != -1) {
         cameraOptions.zoom = zoom;
@@ -1112,12 +1110,12 @@ void nativeFlyTo(JNIEnv *env, jni::jobject* obj, jlong nativeMapViewPtr, jdouble
 
     mbgl::CameraOptions cameraOptions;
     if (angle != -1) {
-        cameraOptions.angle = angle;
+        cameraOptions.angle = angle * M_PI / 180 ;
     }
     cameraOptions.center = mbgl::LatLng(latitude, longitude);
     cameraOptions.padding = nativeMapView->getInsets();
     if (pitch != -1) {
-        cameraOptions.pitch = pitch;
+        cameraOptions.pitch = pitch * M_PI / 180;
     }
     if (zoom != -1) {
         cameraOptions.zoom = zoom;

@@ -389,15 +389,16 @@ public class MapboxMap {
      */
     @UiThread
     public final void moveCamera(CameraUpdate update, MapboxMap.CancelableCallback callback) {
-        // dismiss tracking, moving camera is equal to a gesture
-
         cameraPosition = update.getCameraPosition(this);
         mapView.resetTrackingModesIfRequired(cameraPosition);
         mapView.jumpTo(cameraPosition.bearing, cameraPosition.target, cameraPosition.tilt, cameraPosition.zoom);
         if (callback != null) {
             callback.onFinish();
         }
-        invalidateCameraPosition();
+
+        if (onCameraChangeListener != null) {
+            onCameraChangeListener.onCameraChange(this.cameraPosition);
+        }
     }
 
     /**
@@ -560,8 +561,6 @@ public class MapboxMap {
      */
     @UiThread
     public final void animateCamera(CameraUpdate update, int durationMs, final MapboxMap.CancelableCallback callback) {
-        // dismiss tracking, moving camera is equal to a gesture
-
         cameraPosition = update.getCameraPosition(this);
         mapView.resetTrackingModesIfRequired(cameraPosition);
         mapView.flyTo(cameraPosition.bearing, cameraPosition.target, getDurationNano(durationMs), cameraPosition.tilt,
@@ -602,15 +601,17 @@ public class MapboxMap {
      * Invalidates the current camera position by reconstructing it from mbgl
      */
     private void invalidateCameraPosition() {
-        invalidCameraPosition = false;
+        if(invalidCameraPosition) {
+            invalidCameraPosition = false;
 
-        CameraPosition cameraPosition = mapView.invalidateCameraPosition();
-        if (cameraPosition != null) {
-            this.cameraPosition = cameraPosition;
-        }
+            CameraPosition cameraPosition = mapView.invalidateCameraPosition();
+            if (cameraPosition != null) {
+                this.cameraPosition = cameraPosition;
+            }
 
-        if (onCameraChangeListener != null) {
-            onCameraChangeListener.onCameraChange(this.cameraPosition);
+            if (onCameraChangeListener != null) {
+                onCameraChangeListener.onCameraChange(this.cameraPosition);
+            }
         }
     }
 
@@ -785,7 +786,6 @@ public class MapboxMap {
     //
 
     void setTilt(double tilt) {
-        markerViewManager.setTilt((float) tilt);
         mapView.setTilt(tilt);
     }
 
@@ -2037,7 +2037,7 @@ public class MapboxMap {
          * @return the View that is adapted to the contents of MarkerView
          */
         @Nullable
-        public abstract View getView(@NonNull U marker, @NonNull View convertView, @NonNull ViewGroup parent);
+        public abstract View getView(@NonNull U marker, @Nullable View convertView, @NonNull ViewGroup parent);
 
         /**
          * Called when an MarkerView is removed from the MapView or the View object is going to be reused.
