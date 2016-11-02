@@ -6,12 +6,6 @@
 class QGLWidget;
 #elif MBGL_USE_CGL
 #include <OpenGL/OpenGL.h>
-#elif MBGL_USE_GLX
-#define MBGL_USE_EGL 1
-struct gbm_device {};
-typedef void* EGLContext;
-typedef void* EGLDisplay;
-typedef void* EGLConfig;
 #endif
 
 #include <mbgl/map/backend.hpp>
@@ -60,13 +54,8 @@ private:
     CGLContextObj glContext = nullptr;
 #endif
 
-#if MBGL_USE_EAGL
-    void *glContext = nullptr;
-#endif
 #if MBGL_USE_EGL
-    EGLDisplay dpy;
-    EGLContext glContext = nullptr;
-    EGLConfig config;
+    void *glContext = nullptr;
 #endif
 
     std::function<void(MapChange)> mapChangeCallback;

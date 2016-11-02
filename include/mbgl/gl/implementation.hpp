@@ -10,5 +10,5 @@
         #define MBGL_USE_CGL 1
     #endif
 #else
-    #define MBGL_USE_GLX 1
+    #define MBGL_USE_EGL 1
 #endif

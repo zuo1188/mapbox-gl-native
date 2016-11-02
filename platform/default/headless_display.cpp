@@ -4,7 +4,6 @@
 #include <mbgl/util/string.hpp>
 #include <EGL/egl.h>
 #include <fcntl.h>
-#include <gbm.h>
 #include <unistd.h>
 #endif
 
@@ -34,22 +33,7 @@ HeadlessDisplay::HeadlessDisplay() {
     }
 #endif
 #if MBGL_USE_EGL
-    for (int i = 128; i < (128 + 16); i++) {
-        auto device_name = std::string{ "/dev/dri/renderD" } + mbgl::util::toString(i);
-        fd = open(device_name.c_str(), O_RDWR);
-        if (fd > 0)
-            break;
-    }
-    if (fd < 0) {
-        throw std::runtime_error("Couldn't open drm device.");
-    }
-
-    gbm = gbm_create_device(fd);
-    if (gbm == NULL) {
-        throw std::runtime_error("Couldn't create gbm device.");
-    }
-
-    dpy = eglGetDisplay(reinterpret_cast<EGLNativeDisplayType>(gbm));
+    dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     if (dpy == EGL_NO_DISPLAY) {
         throw std::runtime_error("eglGetDisplay() failed.");
     }
@@ -79,11 +63,8 @@ HeadlessDisplay::~HeadlessDisplay() {
 #if MBGL_USE_CGL
     CGLDestroyPixelFormat(pixelFormat);
 #endif
-
 #if MBGL_USE_EGL
     eglTerminate(dpy);
-    gbm_device_destroy(gbm);
-    close(fd);
 #endif
 }
 

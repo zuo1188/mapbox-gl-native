@@ -4,9 +4,10 @@
 
 #if MBGL_USE_CGL
 #include <OpenGL/OpenGL.h>
-#elif MBGL_USE_GLX
-typedef struct _XDisplay Display;
-typedef struct __GLXFBConfigRec* GLXFBConfig;
+#endif
+
+#if MBGL_USE_EGL
+#include <EGL/egl.h>
 #endif
 
 namespace mbgl {
@@ -21,8 +22,6 @@ public:
 #endif
 
 #if MBGL_USE_EGL
-    int fd;
-    struct gbm_device *gbm = nullptr;
     EGLDisplay dpy = 0;
     EGLConfig config = 0;
 #endif

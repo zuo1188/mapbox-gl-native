@@ -41,7 +41,6 @@ macro(mbgl_platform_core)
         PRIVATE platform/default/webp_reader.cpp
 
         # Headless view
-        PRIVATE platform/default/headless_backend_glx.cpp
         PRIVATE platform/default/headless_backend_egl.cpp
         PRIVATE platform/default/headless_backend.cpp
         PRIVATE platform/default/headless_display.cpp
