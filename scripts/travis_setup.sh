@@ -1,8 +1,34 @@
 #!/usr/bin/env bash
 # This script is sourced; do not set -e or -o pipefail here.
 
+# Ensure mason is on the PATH
+export PATH="`pwd`/.mason:${PATH}" MASON_DIR="`pwd`/.mason"
+
+mapbox_time "checkout_mason" \
+git submodule update --init .mason
+
+# Install core build tools
+mapbox_time "install_cmake" \
+mason install cmake 3.6.2
+export PATH=$(mason prefix cmake 3.6.2)/bin:${PATH}
+which cmake
+mapbox_time "install_ccache" \
+mason install ccache 3.3.1
+export PATH=$(mason prefix ccache 3.3.1)/bin:${PATH}
+which ccache
+
 if [ ! -z "${_CXX}" ]; then export CXX="${_CXX}" ; fi
 if [ ! -z "${_CC}" ]; then export CC="${_CC}" ; fi
+
+# if clang++ is requested we install via mason
+# to allow building using a consistent method on
+# either ubuntu precise or trusty
+if [[ ${CXX} =~ "clang++" ]]; then
+    mapbox_time "install_clang++" \
+    mason install clang++ 3.8.1
+    export PATH=$(mason prefix clang++ 3.8.1)/bin:${PATH}
+    which clang++-3.8
+fi
 
 if [ "${CCACHE:-0}" -ge 1 ]; then
     export CXX="ccache ${CXX}"
@@ -26,12 +52,6 @@ fi
 echo "export CXX=\"${CXX}\""
 echo "export CC=\"${CC}\""
 ${CXX} --version
-
-# Ensure mason is on the PATH
-export PATH="`pwd`/.mason:${PATH}" MASON_DIR="`pwd`/.mason"
-
-mapbox_time "checkout_mason" \
-git submodule update --init .mason
 
 # Touch package.json so that we are definitely going to run an npm update action
 mapbox_time "touch_package_json" \

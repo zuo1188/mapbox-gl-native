@@ -5,23 +5,23 @@ git:
 addons_shortcuts:
   addons_clang38: &clang38
     apt:
-      sources:  [ 'ubuntu-toolchain-r-test', 'george-edison55-precise-backports' ]
-      packages: [ 'clang-3.8', 'libstdc++-5-dev', 'libstdc++6', 'libllvm3.8v4', 'cmake', 'cmake-data',
+      sources:  [ 'ubuntu-toolchain-r-test' ]
+      packages: [ 'libstdc++-5-dev', 'libstdc++6', 'libllvm3.8v4',
                   'libxrandr-dev', 'libxcursor-dev', 'libxinerama-dev' ]
   addons_gcc5: &gcc5
     apt:
-      sources:  [ 'ubuntu-toolchain-r-test', 'george-edison55-precise-backports' ]
-      packages: [ 'g++-5', 'gcc-5', 'libllvm3.8v4', 'cmake', 'cmake-data',
+      sources:  [ 'ubuntu-toolchain-r-test' ]
+      packages: [ 'g++-5', 'gcc-5', 'libllvm3.8v4',
                   'libxrandr-dev', 'libxcursor-dev', 'libxinerama-dev' ]
   addons_qt4: &qt4
     apt:
-      sources:  [ 'ubuntu-toolchain-r-test', 'george-edison55-precise-backports' ]
-      packages: [ 'g++-5', 'gcc-5', 'libllvm3.8v4', 'libjemalloc-dev', 'cmake', 'cmake-data',
+      sources:  [ 'ubuntu-toolchain-r-test' ]
+      packages: [ 'g++-5', 'gcc-5', 'libllvm3.8v4', 'libjemalloc-dev',
                   'mesa-utils', 'qt4-default' ]
   addons_qt5: &qt5
     apt:
-      sources:  [ 'ubuntu-toolchain-r-test', 'george-edison55-precise-backports' ]
-      packages: [ 'g++-5', 'gcc-5', 'libllvm3.8v4', 'cmake', 'cmake-data',
+      sources:  [ 'ubuntu-toolchain-r-test' ]
+      packages: [ 'g++-5', 'gcc-5', 'libllvm3.8v4',
                   'mesa-utils', 'libc6-dbg', 'qt5-default', 'libqt5opengl5-dev', 'qtdeclarative5-dev', 'qtpositioning5-dev', 'qtlocation5-dev' ]
 
 env:
@@ -54,8 +54,8 @@ matrix:
   include:
     # Clang 3.8 - Debug - Node
     - os: linux
-      sudo: required
-      dist: trusty
+      sudo: false
+      dist: precise
       language: node
       compiler: "node4-clang38-debug"
       env: _CXX=clang++-3.8 _CC=clang-3.8 WITH_OSMESA=1
@@ -76,8 +76,8 @@ matrix:
     # GCC 5 - Debug - Coverage
     # FIXME: https://github.com/mapbox/mapbox-gl-native/issues/6918
     - os: linux
-      sudo: required
-      dist: trusty
+      sudo: false
+      dist: precise
       language: cpp
       compiler: "glfw-gcc5-debug"
       env: BUILDTYPE=Debug _CXX=g++-5 _CC=gcc-5 WITH_COVERAGE=1 WITH_OSMESA=1
@@ -88,8 +88,8 @@ matrix:
 
     # GCC 5 - Release
     - os: linux
-      sudo: required
-      dist: trusty
+      sudo: false
+      dist: precise
       language: cpp
       compiler: "glfw-gcc5-release"
       env: BUILDTYPE=Release _CXX=g++-5 _CC=gcc-5 WITH_OSMESA=1
@@ -97,8 +97,8 @@ matrix:
 
     # Clang 3.8 - Debug
     - os: linux
-      sudo: required
-      dist: trusty
+      sudo: false
+      dist: precise
       language: cpp
       compiler: "glfw-clang38-debug"
       env: BUILDTYPE=Debug _CXX=clang++-3.8 _CC=clang-3.8 WITH_OSMESA=1
@@ -106,8 +106,8 @@ matrix:
 
     # Clang 3.8 - Release
     - os: linux
-      sudo: required
-      dist: trusty
+      sudo: false
+      dist: precise
       language: cpp
       compiler: "glfw-clang38-release"
       env: BUILDTYPE=Release _CXX=clang++-3.8 _CC=clang-3.8 WITH_OSMESA=1
@@ -115,8 +115,8 @@ matrix:
 
     # Clang 3.8 - check
     - os: linux
-      sudo: required
-      dist: trusty
+      sudo: false
+      dist: precise
       language: cpp
       compiler: "check-clang38-release"
       env: BUILDTYPE=Release _CXX=clang++-3.8 _CC=clang-3.8 WITH_OSMESA=1
@@ -127,8 +127,8 @@ matrix:
 
     # Qt 4 - Release
     - os: linux
-      sudo: required
-      dist: trusty
+      sudo: false
+      dist: precise
       language: cpp
       compiler: "qt4-gcc5-release"
       env: BUILDTYPE=Release _CXX=g++-5 _CC=gcc-5 RUN_XVFB=1 WITH_QT_4=1
@@ -139,8 +139,8 @@ matrix:
 
     # Qt 5 - Release
     - os: linux
-      sudo: required
-      dist: trusty
+      sudo: false
+      dist: precise
       language: cpp
       compiler: "qt5-gcc5-release"
       env: BUILDTYPE=Release _CXX=g++-5 _CC=gcc-5 RUN_XVFB=1
