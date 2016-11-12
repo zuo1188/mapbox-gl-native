@@ -127,8 +127,9 @@ matrix:
 
     # Qt 4 - Release
     - os: linux
-      sudo: false
-      dist: precise
+      # sudo:false depends on https://github.com/travis-ci/apt-package-whitelist/issues/3621
+      sudo: required
+      dist: trusty
       language: cpp
       compiler: "qt4-gcc5-release"
       env: BUILDTYPE=Release _CXX=g++-5 _CC=gcc-5 RUN_XVFB=1 WITH_QT_4=1
@@ -139,8 +140,9 @@ matrix:
 
     # Qt 5 - Release
     - os: linux
-      sudo: false
-      dist: precise
+      # sudo:false depends on https://github.com/travis-ci/apt-package-whitelist/issues/3622
+      sudo: required
+      dist: trusty
       language: cpp
       compiler: "qt5-gcc5-release"
       env: BUILDTYPE=Release _CXX=g++-5 _CC=gcc-5 RUN_XVFB=1
