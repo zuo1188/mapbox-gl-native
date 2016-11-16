@@ -45,7 +45,6 @@ import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.Surface;
 import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewConfiguration;
@@ -123,6 +122,8 @@ public class MapView extends FrameLayout {
     private ImageView attributionsView;
     private MyLocationView myLocationView;
     private LocationListener myLocationListener;
+
+    private MapSurfaceView mapSurfaceView;
 
     private Projection projection;
 
@@ -202,12 +203,11 @@ public class MapView extends FrameLayout {
             textureView.setSurfaceTextureListener(new SurfaceTextureListener());
             addView(textureView, 0);
         } else {
-            SurfaceView surfaceView = (SurfaceView) findViewById(R.id.surfaceView);
-            surfaceView.getHolder().addCallback(new SurfaceCallback());
-            surfaceView.setVisibility(View.VISIBLE);
+            mapSurfaceView = (MapSurfaceView) findViewById(R.id.surfaceView);
+            //surfaceView.getHolder().addCallback(new SurfaceCallback());
+            mapSurfaceView.setVisibility(View.VISIBLE);
         }
 
-        nativeMapView = new NativeMapView(this);
         iconManager = new IconManager(nativeMapView);
         mapboxMap = new MapboxMap(this, iconManager);
         annotationManager = mapboxMap.getAnnotationManager();
@@ -576,6 +576,8 @@ public class MapView extends FrameLayout {
     public void onStart() {
         onStartCalled = true;
 
+        mapSurfaceView.onResume();
+
         // Register for connectivity changes
         connectivityReceiver = new ConnectivityReceiver();
         getContext().registerReceiver(connectivityReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
@@ -615,6 +617,8 @@ public class MapView extends FrameLayout {
     @UiThread
     public void onStop() {
         onStopCalled = true;
+
+        mapSurfaceView.onPause();
 
         // Unregister for connectivity changes
         if (connectivityReceiver != null) {
@@ -705,11 +709,11 @@ public class MapView extends FrameLayout {
     // Center coordinate
     //
 
-    LatLng getCenterCoordinate(){
+    LatLng getCenterCoordinate() {
         return nativeMapView.getLatLng();
     }
 
-    void setCenterCoordinate(LatLng centerCoordinate){
+    void setCenterCoordinate(LatLng centerCoordinate) {
         nativeMapView.setLatLng(centerCoordinate);
     }
 
@@ -1071,7 +1075,7 @@ public class MapView extends FrameLayout {
     // Mapbox Core GL Camera
     //
 
-    private void cancelTransitions(){
+    private void cancelTransitions() {
         if (cameraCancelableCallback != null) {
             cameraCancelableCallback.onCancel();
             cameraCancelableCallback = null;
@@ -1522,10 +1526,6 @@ public class MapView extends FrameLayout {
         // Called for double taps
         @Override
         public boolean onDoubleTapEvent(MotionEvent e) {
-            if (destroyed || !mapboxMap.getUiSettings().isZoomGesturesEnabled()) {
-                return false;
-            }
-
             switch (e.getAction()) {
                 case MotionEvent.ACTION_DOWN:
                     break;
@@ -2656,7 +2656,7 @@ public class MapView extends FrameLayout {
         }
     }
 
-    private static class ZoomInvalidator implements Runnable {
+    public static class ZoomInvalidator implements Runnable {
 
         private MapboxMap mapboxMap;
 
@@ -2667,7 +2667,7 @@ public class MapView extends FrameLayout {
         @Override
         public void run() {
             // invalidate camera position
-            mapboxMap.getCameraPosition();
+        //    mapboxMap.getCameraPosition();
         }
     }
 

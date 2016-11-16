@@ -40,7 +40,7 @@ final class NativeMapView {
     private long nativeMapViewPtr = 0;
 
     // Used for callbacks
-    private MapView mapView;
+    private MapSurfaceView mapView;
 
     private final float pixelRatio;
 
@@ -56,7 +56,7 @@ final class NativeMapView {
     // Constructors
     //
 
-    public NativeMapView(MapView mapView) {
+    public NativeMapView(MapSurfaceView mapView) {
         Context context = mapView.getContext();
         String dataPath = OfflineManager.getDatabasePath(context);
 

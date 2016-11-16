@@ -27,6 +27,7 @@ import com.mapbox.mapboxsdk.annotations.Marker;
 import com.mapbox.mapboxsdk.annotations.MarkerOptions;
 import com.mapbox.mapboxsdk.annotations.MarkerViewOptions;
 import com.mapbox.mapboxsdk.geometry.LatLng;
+import com.mapbox.mapboxsdk.maps.MapSurfaceView;
 import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
@@ -44,7 +45,7 @@ import java.util.Random;
 public class BulkMarkerActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
     private MapboxMap mapboxMap;
-    private MapView mapView;
+    private MapSurfaceView mapView;
     private boolean customMarkerView;
     private List<LatLng> locations;
 
@@ -63,23 +64,23 @@ public class BulkMarkerActivity extends AppCompatActivity implements AdapterView
             actionBar.setDisplayShowHomeEnabled(true);
         }
 
-        mapView = (MapView) findViewById(R.id.mapView);
-        mapView.onCreate(savedInstanceState);
-        mapView.getMapAsync(new OnMapReadyCallback() {
-            @Override
-            public void onMapReady(@NonNull MapboxMap mapboxMap) {
-                BulkMarkerActivity.this.mapboxMap = mapboxMap;
-
-                if (actionBar != null) {
-                    ArrayAdapter<CharSequence> spinnerAdapter = ArrayAdapter.createFromResource(
-                        actionBar.getThemedContext(), R.array.bulk_marker_list, android.R.layout.simple_spinner_item);
-                    spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                    Spinner spinner = (Spinner) findViewById(R.id.spinner);
-                    spinner.setAdapter(spinnerAdapter);
-                    spinner.setOnItemSelectedListener(BulkMarkerActivity.this);
-                }
-            }
-        });
+        mapView = (MapSurfaceView) findViewById(R.id.mapView);
+//        mapView.onCreate(savedInstanceState);
+//        mapView.getMapAsync(new OnMapReadyCallback() {
+//            @Override
+//            public void onMapReady(@NonNull MapboxMap mapboxMap) {
+//                BulkMarkerActivity.this.mapboxMap = mapboxMap;
+//
+//                if (actionBar != null) {
+//                    ArrayAdapter<CharSequence> spinnerAdapter = ArrayAdapter.createFromResource(
+//                        actionBar.getThemedContext(), R.array.bulk_marker_list, android.R.layout.simple_spinner_item);
+//                    spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+//                    Spinner spinner = (Spinner) findViewById(R.id.spinner);
+//                    spinner.setAdapter(spinnerAdapter);
+//                    spinner.setOnItemSelectedListener(BulkMarkerActivity.this);
+//                }
+//            }
+//        });
 
         final View fab = findViewById(R.id.fab);
         if (fab != null) {
@@ -166,7 +167,7 @@ public class BulkMarkerActivity extends AppCompatActivity implements AdapterView
     @Override
     protected void onStart() {
         super.onStart();
-        mapView.onStart();
+       // mapView.onStart();
     }
 
     @Override
@@ -184,25 +185,25 @@ public class BulkMarkerActivity extends AppCompatActivity implements AdapterView
     @Override
     protected void onStop() {
         super.onStop();
-        mapView.onStop();
+      //  mapView.onStop();
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        mapView.onSaveInstanceState(outState);
+      //  mapView.onSaveInstanceState(outState);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mapView.onDestroy();
+     //   mapView.onDestroy();
     }
 
     @Override
     public void onLowMemory() {
         super.onLowMemory();
-        mapView.onLowMemory();
+      //  mapView.onLowMemory();
     }
 
     @Override
@@ -239,17 +240,17 @@ public class BulkMarkerActivity extends AppCompatActivity implements AdapterView
                     showMarkers(amount);
                 }
 
-                mapView.addOnMapChangedListener(new MapView.OnMapChangedListener() {
-                    @Override
-                    public void onMapChanged(@MapView.MapChange int change) {
-                        if (change == MapView.REGION_IS_CHANGING || change == MapView.REGION_DID_CHANGE) {
-                            if (!mapboxMap.getMarkerViewManager().getMarkerViewAdapters().isEmpty()) {
-                                TextView viewCountView = (TextView) findViewById(R.id.countView);
-                                viewCountView.setText("ViewCache size " + (mapView.getChildCount() - 5));
-                            }
-                        }
-                    }
-                });
+//                mapView.addOnMapChangedListener(new MapView.OnMapChangedListener() {
+//                    @Override
+//                    public void onMapChanged(@MapView.MapChange int change) {
+//                        if (change == MapView.REGION_IS_CHANGING || change == MapView.REGION_DID_CHANGE) {
+//                            if (!mapboxMap.getMarkerViewManager().getMarkerViewAdapters().isEmpty()) {
+//                                TextView viewCountView = (TextView) findViewById(R.id.countView);
+//                                viewCountView.setText("ViewCache size " + (mapView.getChildCount() - 5));
+//                            }
+//                        }
+//                    }
+//                });
 
                 mapboxMap.getMarkerViewManager().setOnMarkerViewClickListener(
                     new MapboxMap.OnMarkerViewClickListener() {

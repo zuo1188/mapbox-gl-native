@@ -21,7 +21,6 @@ public:
     virtual ~NativeMapView();
 
     mbgl::Size getFramebufferSize() const;
-    void updateViewBinding();
     void bind() override;
 
     void activate() override;
@@ -64,22 +63,9 @@ private:
 
     ANativeWindow *window = nullptr;
 
-    EGLDisplay oldDisplay = EGL_NO_DISPLAY;
-    EGLSurface oldReadSurface = EGL_NO_SURFACE;
-    EGLSurface oldDrawSurface = EGL_NO_SURFACE;
-    EGLContext oldContext = EGL_NO_CONTEXT;
-
-    EGLDisplay display = EGL_NO_DISPLAY;
-    EGLSurface surface = EGL_NO_SURFACE;
-    EGLContext context = EGL_NO_CONTEXT;
-
-    EGLConfig config = nullptr;
-    EGLint format = -1;
-
     std::string styleUrl;
     std::string apiKey;
 
-    bool firstTime = false;
     bool fpsEnabled = false;
     bool snapshot = false;
     double fps = 0.0;
@@ -99,7 +85,6 @@ private:
     std::unique_ptr<mbgl::Map> map;
     mbgl::EdgeInsets insets;
 
-    unsigned active = 0;
 };
 }
 }
