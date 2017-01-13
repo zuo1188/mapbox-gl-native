@@ -122,6 +122,9 @@ const CGFloat MGLAnnotationImagePaddingForCallout = 1;
 
 const CGSize MGLAnnotationAccessibilityElementMinimumSize = CGSizeMake(10, 10);
 
+// Context for KVO observing UILayoutGuides.
+static char MGLLayoutGuidesUpdatedContext = 1;
+
 /// Unique identifier representing a single annotation in mbgl.
 typedef uint32_t MGLAnnotationTag;
 
@@ -289,7 +292,8 @@ public:
     NSDate *_userLocationAnimationCompletionDate;
     /// True if a willChange notification has been issued for shape annotation layers and a didChange notification is pending.
     BOOL _isChangingAnnotationLayers;
-
+    BOOL _isObservingTopLayoutGuide;
+    BOOL _isObservingBottomLayoutGuide;
     BOOL _isWaitingForRedundantReachableNotification;
     BOOL _isTargetingInterfaceBuilder;
 
@@ -655,6 +659,14 @@ public:
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [_attributionButton removeObserver:self forKeyPath:@"hidden"];
 
+    if (_isObservingTopLayoutGuide) {
+        [(NSObject *)self.viewControllerForLayoutGuides.topLayoutGuide removeObserver:self forKeyPath:@"bounds" context:(void *)&MGLLayoutGuidesUpdatedContext];
+    }
+    
+    if (_isObservingBottomLayoutGuide) {
+        [(NSObject *)self.viewControllerForLayoutGuides.bottomLayoutGuide removeObserver:self forKeyPath:@"bounds" context:(void *)&MGLLayoutGuidesUpdatedContext];
+    }
+
     // Removing the annotations unregisters any outstanding KVO observers.
     NSArray *annotations = self.annotations;
     if (annotations)
@@ -773,6 +785,30 @@ public:
 
 - (void)updateConstraints
 {
+    // If we have a view controller reference and its automaticallyAdjustsScrollViewInsets
+    // is set to YES, -[MGLMapView adjustContentInset] takes top and bottom layout
+    // guides into account. To get notified about changes to the layout guides,
+    // we need to observe their bounds and re-layout accordingly.
+    
+    UIViewController *viewController = self.viewControllerForLayoutGuides;
+    BOOL useLayoutGuides = viewController.view && viewController.automaticallyAdjustsScrollViewInsets;
+    
+    if (useLayoutGuides && viewController.topLayoutGuide && !_isObservingTopLayoutGuide) {
+        [(NSObject *)viewController.topLayoutGuide addObserver:self forKeyPath:@"bounds" options:0 context:(void *)&MGLLayoutGuidesUpdatedContext];
+        _isObservingTopLayoutGuide = YES;
+    } else if (!useLayoutGuides && _isObservingTopLayoutGuide) {
+        [(NSObject *)viewController.topLayoutGuide removeObserver:self forKeyPath:@"bounds" context:(void *)&MGLLayoutGuidesUpdatedContext];
+        _isObservingTopLayoutGuide = NO;
+    }
+    
+    if (useLayoutGuides && viewController.bottomLayoutGuide && !_isObservingBottomLayoutGuide) {
+        [(NSObject *)viewController.bottomLayoutGuide addObserver:self forKeyPath:@"bounds" options:0 context:(void *)&MGLLayoutGuidesUpdatedContext];
+        _isObservingBottomLayoutGuide = YES;
+    } else if (!useLayoutGuides && _isObservingBottomLayoutGuide) {
+        [(NSObject *)viewController.bottomLayoutGuide removeObserver:self forKeyPath:@"bounds" context:(void *)&MGLLayoutGuidesUpdatedContext];
+        _isObservingBottomLayoutGuide = NO;
+    }
+    
     // compass
     //
     [self removeConstraints:self.compassViewConstraints];
@@ -1865,6 +1901,10 @@ public:
                 [self deselectAnnotation:annotation animated:YES];
             }
         }
+    }
+    else if ([keyPath isEqualToString:@"bounds"] && context == (void *)&MGLLayoutGuidesUpdatedContext)
+    {
+        [self setNeedsLayout];
     }
 }
 
