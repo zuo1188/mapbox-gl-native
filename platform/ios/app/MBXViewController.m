@@ -5,6 +5,7 @@
 #import "MBXOfflinePacksTableViewController.h"
 #import "MBXAnnotationView.h"
 #import "MBXUserLocationAnnotationView.h"
+#import "LimeGreenStyleLayer.h"
 
 #import "MGLFillStyleLayer.h"
 
@@ -72,6 +73,7 @@ typedef NS_ENUM(NSInteger, MBXSettingsRuntimeStylingRows) {
     MBXSettingsRuntimeStylingRasterSource,
     MBXSettingsRuntimeStylingCountryLabels,
     MBXSettingsRuntimeStylingRouteLine,
+    MBXSettingsRuntimeStylingAddLimeGreenTriangleLayer,
 };
 
 typedef NS_ENUM(NSInteger, MBXSettingsMiscellaneousRows) {
@@ -334,6 +336,7 @@ typedef NS_ENUM(NSInteger, MBXSettingsMiscellaneousRows) {
                 @"Style Raster Source",
                 [NSString stringWithFormat:@"Label Countries in %@", (_usingLocaleBasedCountryLabels ? @"Local Language" : [[NSLocale currentLocale] displayNameForKey:NSLocaleIdentifier value:[self bestLanguageForUser]])],
                 @"Add Route Line",
+                @"Add Lime Green Triangle Layer",
             ]];
             break;
         case MBXSettingsMiscellaneous:
@@ -494,6 +497,9 @@ typedef NS_ENUM(NSInteger, MBXSettingsMiscellaneousRows) {
                     break;
                 case MBXSettingsRuntimeStylingRouteLine:
                     [self styleRouteLine];
+                    break;
+                case MBXSettingsRuntimeStylingAddLimeGreenTriangleLayer:
+                    [self styleAddLimeGreenTriangleLayer];
                     break;
                 default:
                     NSAssert(NO, @"All runtime styling setting rows should be implemented");
@@ -1172,6 +1178,12 @@ typedef NS_ENUM(NSInteger, MBXSettingsMiscellaneousRows) {
     routeLayer.lineCap = [MGLStyleConstantValue valueWithRawValue:[NSValue valueWithMGLLineCap:MGLLineCapRound]];
     routeLayer.lineJoin = [MGLStyleConstantValue valueWithRawValue:[NSValue valueWithMGLLineJoin:MGLLineJoinRound]];
     [self.mapView.style addLayer:routeLayer];
+}
+
+- (void)styleAddLimeGreenTriangleLayer
+{
+    LimeGreenStyleLayer *layer = [[LimeGreenStyleLayer alloc] initWithIdentifier:@"mbx-custom"];
+    [self.mapView.style addLayer:layer];
 }
 
 - (void)styleLabelLanguageForLayersNamed:(NSArray<NSString *> *)layers
