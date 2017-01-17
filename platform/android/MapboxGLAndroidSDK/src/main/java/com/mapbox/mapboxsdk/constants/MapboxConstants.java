@@ -50,12 +50,12 @@ public class MapboxConstants {
   /**
    * Animation time of a fling gesture
    */
-  public static final long ANIMATION_DURATION_FLING_BASE = ANIMATION_DURATION_SHORT;
+  public static final long ANIMATION_DURATION_FLING_BASE = 350;
 
   /**
    * Velocity threshold for a fling gesture
    */
-  public static final long VELOCITY_THRESHOLD_IGNORE_FLING = 1000;
+  public static final long VELOCITY_THRESHOLD_IGNORE_FLING = 700;
 
   /**
    * The currently supported minimum zoom level.

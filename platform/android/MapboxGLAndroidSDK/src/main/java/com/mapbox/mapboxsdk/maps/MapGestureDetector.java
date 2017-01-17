@@ -5,6 +5,7 @@ import android.graphics.PointF;
 import android.support.annotation.NonNull;
 import android.support.v4.view.GestureDetectorCompat;
 import android.support.v4.view.ScaleGestureDetectorCompat;
+import android.util.Log;
 import android.view.InputDevice;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -17,6 +18,8 @@ import com.almeros.android.multitouch.gesturedetectors.TwoFingerGestureDetector;
 import com.mapbox.mapboxsdk.constants.MapboxConstants;
 import com.mapbox.mapboxsdk.telemetry.MapboxEvent;
 import com.mapbox.mapboxsdk.utils.MathUtils;
+
+import timber.log.Timber;
 
 /**
  * Manages gestures events on a MapView.
@@ -304,13 +307,6 @@ final class MapGestureDetector {
 
       float screenDensity = uiSettings.getPixelRatio();
 
-      // calculate velocity vector for xy dimensions, independent from screen size
-      double velocityXY = Math.hypot(velocityX / screenDensity, velocityY / screenDensity);
-      if (velocityXY < MapboxConstants.VELOCITY_THRESHOLD_IGNORE_FLING) {
-        // ignore short flings, these can occur when other gestures just have finished executing
-        return false;
-      }
-
       trackingSettings.resetTrackingModesIfRequired(true, false);
 
       // cancel any animation
@@ -322,8 +318,15 @@ final class MapGestureDetector {
       double offsetX = velocityX / tiltFactor / screenDensity;
       double offsetY = velocityY / tiltFactor / screenDensity;
 
+      // calculate velocity vector for xy dimensions
+      double velocityXY = Math.hypot(offsetX, offsetY);
+      if (velocityXY < MapboxConstants.VELOCITY_THRESHOLD_IGNORE_FLING) {
+        // ignore short flings, these can occur when other gestures just have finished executing
+        return false;
+      }
+
       // calculate animation time based on displacement
-      long animationTime = (long) (velocityXY / 7 / tiltFactor + MapboxConstants.ANIMATION_DURATION_FLING_BASE);
+      long animationTime = (long) (velocityXY/ 10 / tiltFactor + MapboxConstants.ANIMATION_DURATION_FLING_BASE);
 
       // update transformation
       transform.setGestureInProgress(true);
