@@ -6,6 +6,7 @@ set -o pipefail
 .mason/mason install valgrind 3.12.0
 
 PARAMS="\
+    --track-origins=yes \
     --leak-check=full \
     --show-leak-kinds=definite \
     --errors-for-leak-kinds=definite \
