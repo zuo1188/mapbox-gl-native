@@ -123,7 +123,7 @@ const CGFloat MGLAnnotationImagePaddingForCallout = 1;
 const CGSize MGLAnnotationAccessibilityElementMinimumSize = CGSizeMake(10, 10);
 
 // Context for KVO observing UILayoutGuides.
-static char MGLLayoutGuidesUpdatedContext = 1;
+static void * MGLLayoutGuidesUpdatedContext = &MGLLayoutGuidesUpdatedContext;
 
 /// Unique identifier representing a single annotation in mbgl.
 typedef uint32_t MGLAnnotationTag;
@@ -848,7 +848,6 @@ public:
     self.attributionButton.frame = CGRectMake(x, y,
                                               CGRectGetWidth(self.attributionButton.bounds),
                                               CGRectGetHeight(self.attributionButton.bounds));
-    
 }
 
 /// Updates `contentInset` to reflect the current window geometry.
@@ -895,19 +894,25 @@ public:
     UIViewController *viewController = self.viewControllerForLayoutGuides;
     BOOL useLayoutGuides = viewController.view && viewController.automaticallyAdjustsScrollViewInsets;
     
-    if (!_isObservingTopLayoutGuide && useLayoutGuides && viewController.topLayoutGuide) {
-        [(NSObject *)viewController.topLayoutGuide addObserver:self forKeyPath:@"bounds" options:0 context:(void *)&MGLLayoutGuidesUpdatedContext];
+    if (!_isObservingTopLayoutGuide && useLayoutGuides && viewController.topLayoutGuide)
+    {
+        [(NSObject *)viewController.topLayoutGuide addObserver:self forKeyPath:@"bounds" options:0 context:MGLLayoutGuidesUpdatedContext];
         _isObservingTopLayoutGuide = YES;
-    } else if (!useLayoutGuides && _isObservingTopLayoutGuide) {
-        [(NSObject *)viewController.topLayoutGuide removeObserver:self forKeyPath:@"bounds" context:(void *)&MGLLayoutGuidesUpdatedContext];
+    }
+    else if (!useLayoutGuides && _isObservingTopLayoutGuide)
+    {
+        [(NSObject *)viewController.topLayoutGuide removeObserver:self forKeyPath:@"bounds" context:MGLLayoutGuidesUpdatedContext];
         _isObservingTopLayoutGuide = NO;
     }
     
-    if (!_isObservingBottomLayoutGuide && useLayoutGuides && viewController.bottomLayoutGuide) {
-        [(NSObject *)viewController.bottomLayoutGuide addObserver:self forKeyPath:@"bounds" options:0 context:(void *)&MGLLayoutGuidesUpdatedContext];
+    if (!_isObservingBottomLayoutGuide && useLayoutGuides && viewController.bottomLayoutGuide)
+    {
+        [(NSObject *)viewController.bottomLayoutGuide addObserver:self forKeyPath:@"bounds" options:0 context:MGLLayoutGuidesUpdatedContext];
         _isObservingBottomLayoutGuide = YES;
-    } else if (!useLayoutGuides && _isObservingBottomLayoutGuide) {
-        [(NSObject *)viewController.bottomLayoutGuide removeObserver:self forKeyPath:@"bounds" context:(void *)&MGLLayoutGuidesUpdatedContext];
+    }
+    else if (!useLayoutGuides && _isObservingBottomLayoutGuide)
+    {
+        [(NSObject *)viewController.bottomLayoutGuide removeObserver:self forKeyPath:@"bounds" context:MGLLayoutGuidesUpdatedContext];
         _isObservingBottomLayoutGuide = NO;
     }
 }
@@ -1841,7 +1846,7 @@ public:
             }
         }
     }
-    else if ([keyPath isEqualToString:@"bounds"] && context == (void *)&MGLLayoutGuidesUpdatedContext)
+    else if (context == MGLLayoutGuidesUpdatedContext && [keyPath isEqualToString:@"bounds"])
     {
         [self setNeedsLayout];
     }
