@@ -205,7 +205,7 @@ final class NativeMapView {
   }
 
   void setLatLng(LatLng latLng) {
-    Timber.i("setLatLng %sx%s - %s", latLng.getLatitude(), latLng.getLongitude());
+    Timber.i("setLatLng %s", latLng.toString());
     setLatLng(latLng.getLatitude(), latLng.getLongitude());
   }
 
@@ -397,8 +397,8 @@ final class NativeMapView {
 
   private native LatLng latLngForProjectedMeters(double northing, double easting);
 
-  LatLng latLngForPixel(PointF pixel) {
-    return latLngForPixel(pixel.x / pixelRatio, pixel.y / pixelRatio).wrap();
+  LatLng fromScreenLocation(float x, float y) {
+    return latLngForPixel(x / pixelRatio, y / pixelRatio).wrap();
   }
 
   private native LatLng latLngForPixel(float x, float y);

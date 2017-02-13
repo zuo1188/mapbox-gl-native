@@ -92,7 +92,7 @@ public class Projection {
     mapState.queueRenderEvent(new MapRunnable() {
       @Override
       public void execute(@NonNull NativeMapView nativeMapView) {
-        final LatLng latLng = nativeMapView.latLngForPixel(point);
+        final LatLng latLng = nativeMapView.fromScreenLocation(point.x, point.y);
         mapState.queueUiEvent(new Runnable() {
           @Override
           public void run() {
@@ -120,10 +120,10 @@ public class Projection {
         float top = contentPadding[1];
         float bottom = nativeMapView.getHeight() - contentPadding[3];
 
-        LatLng topLeft = nativeMapView.latLngForPixel(new PointF(left, top));
-        LatLng topRight = nativeMapView.latLngForPixel(new PointF(right, top));
-        LatLng bottomRight = nativeMapView.latLngForPixel(new PointF(right, bottom));
-        LatLng bottomLeft = nativeMapView.latLngForPixel(new PointF(left, bottom));
+        LatLng topLeft = nativeMapView.fromScreenLocation(left, top);
+        LatLng topRight = nativeMapView.fromScreenLocation(right, top);
+        LatLng bottomRight = nativeMapView.fromScreenLocation(right, bottom);
+        LatLng bottomLeft = nativeMapView.fromScreenLocation(left, bottom);
 
         LatLngBounds bounds = builder.include(topLeft)
           .include(topRight)
