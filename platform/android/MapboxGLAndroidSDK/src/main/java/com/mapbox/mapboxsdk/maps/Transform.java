@@ -10,7 +10,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
 import android.support.annotation.WorkerThread;
-import android.support.v4.view.animation.LinearOutSlowInInterpolator;
+import android.view.animation.AnticipateOvershootInterpolator;
+import android.view.animation.BounceInterpolator;
 import android.view.animation.LinearInterpolator;
 
 import com.mapbox.mapboxsdk.annotations.MarkerViewManager;
@@ -256,10 +257,20 @@ final class Transform extends MapThreadExecutor implements State {
     currentTransformState.zoom = transformState.zoom;
     currentTransformState.bearing = transformState.bearing;
     currentTransformState.tilt = transformState.tilt;
+
     nativeMapView.setLatLng(currentTransformState.latLng);
     nativeMapView.setZoom(currentTransformState.zoom);
-   // nativeMapView.setBearing(currentTransformState.bearing);
-    //nativeMapView.setPitch(currentTransformState.tilt);
+    nativeMapView.setPitch(currentTransformState.tilt);
+    nativeMapView.setBearing(currentTransformState.bearing);
+
+//    nativeMapView.easeTo(currentTransformState.bearing,
+//      currentTransformState.latLng,
+//      0,
+//      currentTransformState.tilt,
+//      currentTransformState.zoom,
+//      true);
+
+    Timber.e("STATE ANIMATING: %s", currentTransformState);
   }
 
   @UiThread
@@ -268,52 +279,54 @@ final class Transform extends MapThreadExecutor implements State {
       @Override
       public void execute(@NonNull final NativeMapView nativeMapView) {
         // calculate new state
-        LatLng latLng = nativeMapView.fromScreenLocation(x, y);
-        futureTransformState.setLatLng(latLng);
-        futureTransformState.setZoom(zoomIn ? currentTransformState.zoom + 1 : currentTransformState.zoom - 1);
-        futureTransformState.setTilt(currentTransformState.tilt);
-        futureTransformState.setBearing(currentTransformState.bearing);
-
-        final ValueAnimator stateAnimator = ObjectAnimator.ofObject(this, "currentTransformState",
-          new TransformStateEvaluator(), currentTransformState, futureTransformState);
-        stateAnimator.setDuration(9000);
-        stateAnimator.setInterpolator(new LinearInterpolator());
-        stateAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-          @Override
-          public void onAnimationUpdate(ValueAnimator valueAnimator) {
-            final TransformState transformState = (TransformState) valueAnimator.getAnimatedValue();
-            queueRenderEvent(new MapRunnable() {
-              @Override
-              public void execute(@NonNull NativeMapView nativeMapView) {
-                updateTransformationState(nativeMapView, transformState);
-              }
-            });
-          }
-        });
+        final LatLng latLng = nativeMapView.fromScreenLocation(x, y);
         queueUiEvent(new Runnable() {
           @Override
           public void run() {
+            futureTransformState.setLatLng(latLng);
+            futureTransformState.setZoom(zoomIn ? currentTransformState.zoom + 1 : currentTransformState.zoom - 1);
+            futureTransformState.setTilt(currentTransformState.tilt);
+            futureTransformState.setBearing(currentTransformState.bearing);
+
+            Timber.e("STATE: Now  %s", currentTransformState);
+            Timber.e("STATE: Future %s", futureTransformState);
+            final ValueAnimator stateAnimator = ObjectAnimator.ofObject(this, "currentTransformState",
+              new TransformStateEvaluator(), new TransformState(currentTransformState), futureTransformState);
+            stateAnimator.setDuration(MapboxConstants.ANIMATION_DURATION);
+            stateAnimator.setInterpolator(new AnticipateOvershootInterpolator());
+            stateAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+              @Override
+              public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                final TransformState transformState = (TransformState) valueAnimator.getAnimatedValue();
+                Timber.e(transformState.toString());
+                queueRenderEvent(new MapRunnable() {
+                  @Override
+                  public void execute(@NonNull NativeMapView nativeMapView) {
+                    updateTransformationState(nativeMapView, transformState);
+                  }
+                });
+              }
+            });
+            stateAnimator.addListener(new AnimatorListenerAdapter() {
+              @Override
+              public void onAnimationEnd(Animator animation) {
+                super.onAnimationEnd(animation);
+                Timber.d("OnAnimationEnd");
+                queueRenderEvent(new MapRunnable() {
+                  @Override
+                  public void execute(@NonNull NativeMapView nativeMapView) {
+                    nativeMapView.setGestureInProgress(false);
+                  }
+                });
+              }
+            });
             stateAnimator.start();
           }
         });
-      }
-    });
 
-    float zoomFloat = (float) currentTransformState.getZoom();
-    ValueAnimator va = ValueAnimator.ofFloat(0.0f, 1.0f);
-    va.setDuration(MapboxConstants.ANIMATION_DURATION);
-    va.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-      public void onAnimationUpdate(final ValueAnimator animation) {
-        final double zoom = ((Float) animation.getAnimatedValue()).doubleValue();
-        queueRenderEvent(new MapRunnable() {
-          @Override
-          public void execute(@NonNull NativeMapView nativeMapView) {
-            nativeMapView.scaleBy(zoom, x, y);
-          }
-        });
+        nativeMapView.setGestureInProgress(true);
       }
     });
-    va.start();
   }
 
   @UiThread
@@ -468,6 +481,17 @@ final class Transform extends MapThreadExecutor implements State {
     private double tilt;
     private double bearing;
 
+    TransformState() {
+      latLng = new LatLng();
+    }
+
+    TransformState(TransformState transformState) {
+      latLng = transformState.getLatLng();
+      zoom = transformState.getZoom();
+      tilt = transformState.getTilt();
+      bearing = transformState.getBearing();
+    }
+
     public LatLng getLatLng() {
       return latLng;
     }
@@ -499,24 +523,33 @@ final class Transform extends MapThreadExecutor implements State {
     public void setBearing(double bearing) {
       this.bearing = bearing;
     }
+
+    /**
+     * Returns a String with the camera target, zoom, bearing and tilt.
+     *
+     * @return A String with CameraPosition information.
+     */
+    @Override
+    public String toString() {
+      return "Target: " + latLng + ", Zoom:" + zoom + ", Bearing:" + bearing + ", Tilt:" + tilt;
+    }
+
   }
 
   private class TransformStateEvaluator implements TypeEvaluator<TransformState> {
 
     private final TransformState transformState = new TransformState();
-    private final LatLng latLng = new LatLng();
 
     @Override
     public TransformState evaluate(float fraction, TransformState startValue, TransformState endValue) {
-      latLng.setLatitude(startValue.latLng.getLatitude()
-        + ((endValue.latLng.getLatitude() - startValue.latLng.getLatitude()) * fraction));
-      latLng.setLongitude(startValue.latLng.getLongitude()
-        + ((endValue.latLng.getLongitude() - startValue.latLng.getLongitude()) * fraction));
-      transformState.latLng = latLng;
-
-      transformState.zoom = startValue.zoom + ((endValue.zoom - startValue.zoom) * fraction);
+      transformState.latLng.setLatitude(startValue.latLng.getLatitude()
+        + (endValue.latLng.getLatitude() - startValue.latLng.getLatitude()) * fraction);
+      transformState.latLng.setLongitude(startValue.latLng.getLongitude()
+        + (endValue.latLng.getLongitude() - startValue.latLng.getLongitude()) * fraction);
+      transformState.zoom = startValue.zoom + (endValue.zoom - startValue.zoom) * fraction;
       return transformState;
     }
   }
+
 
 }
