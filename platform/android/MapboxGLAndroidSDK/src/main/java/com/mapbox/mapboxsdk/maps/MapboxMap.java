@@ -469,7 +469,6 @@ public final class MapboxMap {
    *
    * @param minZoom The new minimum zoom level.
    */
-  @UiThread
   public void setMinZoomPreference(
     @FloatRange(from = MapboxConstants.MINIMUM_ZOOM, to = MapboxConstants.MAXIMUM_ZOOM) double minZoom) {
     transform.setMinZoom(minZoom);
@@ -482,7 +481,6 @@ public final class MapboxMap {
    *
    * @return The minimum zoom level.
    */
-  @UiThread
   public double getMinZoomLevel() {
     return transform.getMinZoom();
   }
@@ -498,7 +496,6 @@ public final class MapboxMap {
    *
    * @param maxZoom The new maximum zoom level.
    */
-  @UiThread
   public void setMaxZoomPreference(@FloatRange(from = MapboxConstants.MINIMUM_ZOOM,
     to = MapboxConstants.MAXIMUM_ZOOM) double maxZoom) {
     transform.setMaxZoom(maxZoom);
@@ -511,7 +508,6 @@ public final class MapboxMap {
    *
    * @return The maximum zoom level.
    */
-  @UiThread
   public double getMaxZoomLevel() {
     return transform.getMaxZoom();
   }
@@ -565,7 +561,6 @@ public final class MapboxMap {
    *
    * @return the Projection associated with this map
    */
-  @UiThread
   public Projection getProjection() {
     return projection;
   }
@@ -592,7 +587,6 @@ public final class MapboxMap {
    *
    * @return The current position of the Camera.
    */
-  @UiThread
   public final CameraPosition getCameraPosition() {
     return transform.getCameraPosition();
   }

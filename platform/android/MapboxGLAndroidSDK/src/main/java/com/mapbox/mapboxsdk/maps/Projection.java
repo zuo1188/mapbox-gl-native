@@ -1,8 +1,11 @@
 package com.mapbox.mapboxsdk.maps;
 
 import android.graphics.PointF;
+import android.os.Looper;
 import android.support.annotation.FloatRange;
 import android.support.annotation.NonNull;
+import android.support.annotation.UiThread;
+import android.support.annotation.WorkerThread;
 
 import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.geometry.LatLngBounds;
@@ -63,6 +66,7 @@ public class Projection {
    * @param latitude The latitude for which to return the value.
    * @return The distance measured in meters.
    */
+  @UiThread
   public void getMetersPerPixelAtLatitude(@FloatRange(from = -90, to = 90) final double latitude,
                                           final Callback<Double> listener) {
     mapState.queueRenderEvent(new MapRunnable() {
@@ -88,6 +92,7 @@ public class Projection {
    * @return The LatLng corresponding to the point on the screen, or null if the ray through
    * the given screen point does not intersect the ground plane.
    */
+  @UiThread
   public void fromScreenLocation(final PointF point, final Callback<LatLng> listener) {
     mapState.queueRenderEvent(new MapRunnable() {
       @Override
@@ -103,12 +108,22 @@ public class Projection {
     });
   }
 
+  @WorkerThread
+  public LatLng fromScreenLocation(float x, float y) {
+    if (Looper.myLooper() == Looper.getMainLooper()) {
+      throw new IllegalThreadStateException("Projection#toScreenLocation needs to be called from a worker thread." +
+        "Please use Projection#toScreenLocation(LatLng latLng, Callback<PointF> listener) instead.");
+    }
+    return mapState.getNativeMapView().fromScreenLocation(x, y);
+  }
+
   /**
    * Gets a projection of the viewing frustum for converting between screen coordinates and
    * geo-latitude/longitude coordinates.
    *
    * @return The projection of the viewing frustum in its current state.
    */
+  @UiThread
   public void getVisibleRegion(final Callback<VisibleRegion> listener) {
     mapState.queueRenderEvent(new MapRunnable() {
       @Override
@@ -142,6 +157,15 @@ public class Projection {
     });
   }
 
+  @WorkerThread
+  public PointF toScreenLocation(final LatLng location) {
+    if (Looper.myLooper() == Looper.getMainLooper()) {
+      throw new IllegalThreadStateException("Projection#toScreenLocation needs to be called from a worker thread." +
+        "Please use Projection#toScreenLocation(LatLng latLng, Callback<PointF> listener) instead.");
+    }
+    return mapState.getNativeMapView().toScreenLocation(location);
+  }
+
   /**
    * Returns a screen location that corresponds to a geographical coordinate (LatLng).
    * The screen location is in screen pixels (not display pixels) relative to the top left
@@ -150,11 +174,12 @@ public class Projection {
    * @param location A LatLng on the map to convert to a screen location.
    * @return A Point representing the screen location in screen pixels.
    */
+  @UiThread
   public void toScreenLocation(final LatLng location, final Callback<PointF> listener) {
     mapState.queueRenderEvent(new MapRunnable() {
       @Override
       public void execute(@NonNull NativeMapView nativeMapView) {
-        final PointF pointF = nativeMapView.pixelForLatLng(location);
+        final PointF pointF = nativeMapView.toScreenLocation(location);
         mapState.queueUiEvent(new Runnable() {
           @Override
           public void run() {

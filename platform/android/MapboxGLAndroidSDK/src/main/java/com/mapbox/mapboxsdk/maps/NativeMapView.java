@@ -403,7 +403,7 @@ final class NativeMapView {
 
   private native LatLng latLngForPixel(float x, float y);
 
-  PointF pixelForLatLng(LatLng latLng) {
+  PointF toScreenLocation(LatLng latLng) {
     PointF pointF = pixelForLatLng(latLng.getLatitude(), latLng.getLongitude());
     pointF.set(pointF.x * pixelRatio, pointF.y * pixelRatio);
     return pointF;
