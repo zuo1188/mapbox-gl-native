@@ -179,7 +179,7 @@ public final class CompassView extends AppCompatImageView implements Runnable, F
         //mapboxMap.setFocalBearing(0, mapboxMap.getWidth() / 2, mapboxMap.getHeight() / 2, TIME_MAP_NORTH_ANIMATION);
         //}
         // FIXME: 10/02/2017 with animation and focal point
-        mapboxMap.resetNorth();
+        //        mapboxMap.resetNorth();
         compassView.postDelayed(compassView, TIME_WAIT_IDLE + TIME_MAP_NORTH_ANIMATION);
       }
     }

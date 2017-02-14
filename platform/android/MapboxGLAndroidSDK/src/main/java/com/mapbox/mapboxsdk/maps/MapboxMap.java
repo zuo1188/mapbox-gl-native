@@ -631,10 +631,7 @@ public final class MapboxMap {
    */
   @UiThread
   public final void moveCamera(final CameraUpdate update, final MapboxMap.CancelableCallback callback) {
-    transform.moveCamera(MapboxMap.this, update, callback);
-    // MapChange.REGION_DID_CHANGE_ANIMATED is not called for `jumpTo`
-    // invalidate camera position to provide OnCameraChange event.
-    invalidateCameraPosition();
+    transform.animateCamera(MapboxMap.this, update, 0, callback);
   }
 
   /**
@@ -732,7 +729,7 @@ public final class MapboxMap {
   @UiThread
   public final void easeCamera(final CameraUpdate update, final int durationMs, final boolean easingInterpolator,
                                final MapboxMap.CancelableCallback callback) {
-    transform.easeCamera(MapboxMap.this, update, durationMs, easingInterpolator, callback);
+    transform.animateCamera(MapboxMap.this, update, durationMs, callback);
   }
 
   /**
@@ -817,15 +814,8 @@ public final class MapboxMap {
   }
 
   //
-  //  Reset North
+  // Size
   //
-
-  /**
-   * Resets the map view to face north.
-   */
-  public void resetNorth() {
-    transform.resetNorth();
-  }
 
   public float getHeight() {
     return projection.getHeight();

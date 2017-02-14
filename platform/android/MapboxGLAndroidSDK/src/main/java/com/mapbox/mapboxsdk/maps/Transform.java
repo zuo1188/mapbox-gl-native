@@ -1,7 +1,5 @@
 package com.mapbox.mapboxsdk.maps;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.animation.TypeEvaluator;
 import android.animation.ValueAnimator;
@@ -10,8 +8,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
 import android.support.annotation.WorkerThread;
-import android.view.animation.AnticipateOvershootInterpolator;
-import android.view.animation.BounceInterpolator;
+import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.Interpolator;
 import android.view.animation.LinearInterpolator;
 
 import com.mapbox.mapboxsdk.annotations.MarkerViewManager;
@@ -21,8 +19,6 @@ import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
 import com.mapbox.mapboxsdk.constants.MapboxConstants;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.maps.widgets.MyLocationView;
-
-import java.util.concurrent.TimeUnit;
 
 import timber.log.Timber;
 
@@ -40,6 +36,7 @@ final class Transform extends MapThreadExecutor implements State {
   private final TrackingSettings trackingSettings;
   private final MyLocationView myLocationView;
 
+  private ValueAnimator stateAnimator;
   private MapboxMap.CancelableCallback cameraCancelableCallback;
   private MapboxMap.OnCameraChangeListener onCameraChangeListener;
 
@@ -58,7 +55,7 @@ final class Transform extends MapThreadExecutor implements State {
   void initialise(@NonNull MapboxMap mapboxMap, @NonNull MapboxMapOptions options) {
     CameraPosition position = options.getCamera();
     if (position != null && !position.equals(CameraPosition.DEFAULT)) {
-      moveCamera(mapboxMap, CameraUpdateFactory.newCameraPosition(position), null);
+      animateCamera(mapboxMap, CameraUpdateFactory.newCameraPosition(position), 0, null);
     }
   }
 
@@ -116,84 +113,33 @@ final class Transform extends MapThreadExecutor implements State {
   }
 
   @UiThread
-  final void moveCamera(final MapboxMap mapboxMap, final CameraUpdate update,
-                        final MapboxMap.CancelableCallback callback) {
-    queueRenderEvent(new MapRunnable() {
-      @Override
-      public void execute(@NonNull NativeMapView nativeMapView) {
-        CameraPosition cameraPosition = update.getCameraPosition(mapboxMap);
-        setCameraPosition(cameraPosition);
-        cancelTransitions(nativeMapView);
-        nativeMapView.jumpTo(cameraPosition.bearing, cameraPosition.target, cameraPosition.tilt, cameraPosition.zoom);
-        trackingSettings.resetTrackingModesIfRequired(cameraPosition);
-        if (callback != null) {
-          callback.onFinish();
-        }
-      }
-    });
-
-  }
-
-  @UiThread
-  final void easeCamera(final MapboxMap mapboxMap, final CameraUpdate update, final int durationMs,
-                        final boolean easingInterpolator, final MapboxMap.CancelableCallback callback) {
-    queueRenderEvent(new MapRunnable() {
-      @Override
-      public void execute(@NonNull NativeMapView nativeMapView) {
-        CameraPosition position = update.getCameraPosition(mapboxMap);
-        trackingSettings.resetTrackingModesIfRequired(position);
-
-        cancelTransitions(nativeMapView);
-        if (callback != null) {
-          cameraCancelableCallback = callback;
-          // nativeMapView.addOnMapChangedListener(Transform.this);
-        }
-
-        nativeMapView.easeTo(position.bearing, position.target, getDurationNano(durationMs), position.tilt,
-          position.zoom, easingInterpolator);
-      }
-    });
-  }
-
-  @UiThread
   final void animateCamera(final MapboxMap mapboxMap, final CameraUpdate update, final int durationMs,
                            final MapboxMap.CancelableCallback callback) {
     queueRenderEvent(new MapRunnable() {
       @Override
       public void execute(@NonNull NativeMapView nativeMapView) {
-        CameraPosition position = update.getCameraPosition(mapboxMap);
+        final CameraPosition position = update.getCameraPosition(mapboxMap);
         trackingSettings.resetTrackingModesIfRequired(position);
-
         cancelTransitions(nativeMapView);
         if (callback != null) {
           cameraCancelableCallback = callback;
           // nativeMapView.addOnMapChangedListener(Transform.this);
         }
 
-        nativeMapView.flyTo(position.bearing, position.target, getDurationNano(durationMs), position.tilt,
-          position.zoom);
+        queueUiEvent(new Runnable() {
+          @Override
+          public void run() {
+            animate(
+              position.target,
+              position.zoom,
+              position.tilt,
+              position.bearing,
+              durationMs,
+              new LinearInterpolator());
+          }
+        });
       }
     });
-  }
-
-  @UiThread
-  void invalidateCameraPosition() {
-//    queueRenderEvent(new MapRunnable() {
-//      @Override
-//      public void execute(@NonNull NativeMapView nativeMapView) {
-//        final CameraPosition cameraPosition = new CameraPosition.Builder(nativeMapView.getCameraValues()).build();
-//        queueUiEvent(new Runnable() {
-//          @Override
-//          public void run() {
-//            updateCameraPosition(cameraPosition);
-//            if (onCameraChangeListener != null) {
-//              // post camera change event on ui Thread
-//              onCameraChangeListener.onCameraChange(cameraPosition);
-//            }
-//          }
-//        });
-//      }
-//    });
   }
 
   @UiThread
@@ -208,37 +154,41 @@ final class Transform extends MapThreadExecutor implements State {
 
   @WorkerThread
   void cancelTransitions(NativeMapView nativeMapView) {
-    if (cameraCancelableCallback != null) {
-      queueUiEvent(new Runnable() {
-        @Override
-        public void run() {
-          cameraCancelableCallback.onCancel();
-          cameraCancelableCallback = null;
+    queueUiEvent(new Runnable() {
+      @Override
+      public void run() {
+        if (stateAnimator != null) {
+          stateAnimator.cancel();
         }
-      });
-    }
+        // todo migrate this to onAnimationCancel
+        if (cameraCancelableCallback != null) {
+          queueUiEvent(new Runnable() {
+            @Override
+            public void run() {
+              cameraCancelableCallback.onCancel();
+              cameraCancelableCallback = null;
+            }
+          });
+        }
+      }
+    });
+
+    // do we still needs this? :thinking_face:
     nativeMapView.cancelTransitions();
   }
 
-  @UiThread
-  void resetNorth() {
-    queueRenderEvent(new MapRunnable() {
-      @Override
-      public void execute(@NonNull NativeMapView nativeMapView) {
-        cancelTransitions(nativeMapView);
-        nativeMapView.resetNorth();
-      }
-    });
-  }
+  //
+  // CameraChangeListener
+  //
 
   @UiThread
   void setOnCameraChangeListener(@Nullable MapboxMap.OnCameraChangeListener listener) {
     this.onCameraChangeListener = listener;
   }
 
-  private long getDurationNano(long durationMs) {
-    return durationMs > 0 ? TimeUnit.NANOSECONDS.convert(durationMs, TimeUnit.MILLISECONDS) : 0;
-  }
+  //
+  // Zoom
+  //
 
   @UiThread
   double getZoom() {
@@ -249,28 +199,6 @@ final class Transform extends MapThreadExecutor implements State {
   void zoom(boolean zoomIn) {
     currentTransformState.setZoom(zoomIn ? currentTransformState.getZoom() + 1 : currentTransformState.getZoom() - 1);
     zoom(zoomIn, -1.0f, -1.0f);
-  }
-
-  @WorkerThread
-  private synchronized void updateTransformationState(NativeMapView nativeMapView, TransformState transformState) {
-    currentTransformState.latLng = transformState.latLng;
-    currentTransformState.zoom = transformState.zoom;
-    currentTransformState.bearing = transformState.bearing;
-    currentTransformState.tilt = transformState.tilt;
-
-    nativeMapView.setLatLng(currentTransformState.latLng);
-    nativeMapView.setZoom(currentTransformState.zoom);
-    nativeMapView.setPitch(currentTransformState.tilt);
-    nativeMapView.setBearing(currentTransformState.bearing);
-
-//    nativeMapView.easeTo(currentTransformState.bearing,
-//      currentTransformState.latLng,
-//      0,
-//      currentTransformState.tilt,
-//      currentTransformState.zoom,
-//      true);
-
-    Timber.e("STATE ANIMATING: %s", currentTransformState);
   }
 
   @UiThread
@@ -290,10 +218,10 @@ final class Transform extends MapThreadExecutor implements State {
 
             Timber.e("STATE: Now  %s", currentTransformState);
             Timber.e("STATE: Future %s", futureTransformState);
-            final ValueAnimator stateAnimator = ObjectAnimator.ofObject(this, "currentTransformState",
+            stateAnimator = ObjectAnimator.ofObject(this, "currentTransformState",
               new TransformStateEvaluator(), new TransformState(currentTransformState), futureTransformState);
             stateAnimator.setDuration(MapboxConstants.ANIMATION_DURATION);
-            stateAnimator.setInterpolator(new AnticipateOvershootInterpolator());
+            stateAnimator.setInterpolator(new AccelerateDecelerateInterpolator());
             stateAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
               @Override
               public void onAnimationUpdate(ValueAnimator valueAnimator) {
@@ -307,24 +235,9 @@ final class Transform extends MapThreadExecutor implements State {
                 });
               }
             });
-            stateAnimator.addListener(new AnimatorListenerAdapter() {
-              @Override
-              public void onAnimationEnd(Animator animation) {
-                super.onAnimationEnd(animation);
-                Timber.d("OnAnimationEnd");
-                queueRenderEvent(new MapRunnable() {
-                  @Override
-                  public void execute(@NonNull NativeMapView nativeMapView) {
-                    nativeMapView.setGestureInProgress(false);
-                  }
-                });
-              }
-            });
             stateAnimator.start();
           }
         });
-
-        nativeMapView.setGestureInProgress(true);
       }
     });
   }
@@ -338,6 +251,10 @@ final class Transform extends MapThreadExecutor implements State {
       }
     });
   }
+
+  //
+  // Bearing
+  //
 
   @UiThread
   double getBearing() {
@@ -377,7 +294,7 @@ final class Transform extends MapThreadExecutor implements State {
 
   @UiThread
   double getTilt() {
-    return currentTransformState.getBearing();
+    return currentTransformState.getTilt();
   }
 
   @UiThread
@@ -390,7 +307,7 @@ final class Transform extends MapThreadExecutor implements State {
     queueRenderEvent(new MapRunnable() {
       @Override
       public void execute(@NonNull NativeMapView nativeMapView) {
-        nativeMapView.setPitch(pitch, 0);
+        nativeMapView.setPitch(pitch);
       }
     });
   }
@@ -406,9 +323,6 @@ final class Transform extends MapThreadExecutor implements State {
         nativeMapView.setGestureInProgress(gestureInProgress);
       }
     });
-    if (!gestureInProgress) {
-      invalidateCameraPosition();
-    }
   }
 
   void zoomBy(final double pow, final float x, final float y) {
@@ -473,6 +387,53 @@ final class Transform extends MapThreadExecutor implements State {
     return maxZoom;
   }
 
+  //
+  // TransformState
+  //
+
+  @UiThread
+  private void animate(LatLng latLng, double zoom, double tilt, double bearing, long duration,
+                       Interpolator interpolator) {
+    futureTransformState.setLatLng(latLng);
+    futureTransformState.setZoom(zoom);
+    futureTransformState.setTilt(tilt);
+    futureTransformState.setBearing(bearing);
+
+    stateAnimator = ObjectAnimator.ofObject(this, "currentTransformState",
+      new TransformStateEvaluator(), new TransformState(currentTransformState), new TransformState(futureTransformState));
+    stateAnimator.setDuration(duration);
+    stateAnimator.setInterpolator(interpolator);
+    stateAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+
+      @Override
+      public synchronized void onAnimationUpdate(ValueAnimator valueAnimator) {
+        final TransformState transformState = (TransformState) valueAnimator.getAnimatedValue();
+        Timber.e("A: OnAnimationUpdated called on UIThread with transformState: %s", transformState);
+        queueRenderEvent(new MapRunnable() {
+          @Override
+          public void execute(@NonNull NativeMapView nativeMapView) {
+            updateTransformationState(nativeMapView, transformState);
+          }
+        });
+      }
+    });
+    stateAnimator.start();
+  }
+
+  @WorkerThread
+  private synchronized void updateTransformationState(NativeMapView nativeMapView, TransformState transformState) {
+    Timber.e("B: setCameraPosition called on WorkerThread with transformState: %s", transformState);
+    currentTransformState.latLng = transformState.latLng;
+    currentTransformState.zoom = transformState.zoom;
+    currentTransformState.bearing = transformState.bearing;
+    currentTransformState.tilt = transformState.tilt;
+    nativeMapView.setCameraPosition(
+      transformState.bearing,
+      transformState.latLng,
+      transformState.tilt,
+      transformState.zoom
+    );
+  }
 
   private class TransformState {
 
@@ -533,7 +494,6 @@ final class Transform extends MapThreadExecutor implements State {
     public String toString() {
       return "Target: " + latLng + ", Zoom:" + zoom + ", Bearing:" + bearing + ", Tilt:" + tilt;
     }
-
   }
 
   private class TransformStateEvaluator implements TypeEvaluator<TransformState> {
@@ -547,9 +507,9 @@ final class Transform extends MapThreadExecutor implements State {
       transformState.latLng.setLongitude(startValue.latLng.getLongitude()
         + (endValue.latLng.getLongitude() - startValue.latLng.getLongitude()) * fraction);
       transformState.zoom = startValue.zoom + (endValue.zoom - startValue.zoom) * fraction;
+      transformState.tilt = startValue.tilt + (endValue.tilt - endValue.tilt) * fraction;
+      transformState.bearing = startValue.bearing + (endValue.bearing - endValue.bearing) * fraction;
       return transformState;
     }
   }
-
-
 }
