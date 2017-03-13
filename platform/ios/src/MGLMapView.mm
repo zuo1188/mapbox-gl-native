@@ -56,7 +56,9 @@
 #import "MGLAnnotationView_Private.h"
 #import "MGLStyle_Private.h"
 #import "MGLStyleLayer_Private.h"
+#if !TARGET_OS_TV
 #import "MGLMapboxEvents.h"
+#endif
 #import "MGLSDKUpdateChecker.h"
 #import "MGLCompactCalloutView.h"
 #import "MGLAnnotationContainerView.h"
@@ -106,8 +108,10 @@ const double MGLDefaultZoomLevelForUserTracking = 14.0;
 
 const NSUInteger MGLTargetFrameInterval = 1;  // Target FPS will be 60 divided by this value
 
+#if !TARGET_OS_TV
 /// Tolerance for snapping to true north, measured in degrees in either direction.
 const CLLocationDirection MGLToleranceForSnappingToNorth = 7;
+#endif
 
 /// Reuse identifier and file name of the default point annotation image.
 static NSString * const MGLDefaultStyleMarkerSymbolName = @"default_marker";
@@ -238,12 +242,14 @@ public:
 @property (nonatomic, readwrite) MGLStyle *style;
 @property (nonatomic) UITapGestureRecognizer *singleTapGestureRecognizer;
 @property (nonatomic) UITapGestureRecognizer *doubleTap;
-@property (nonatomic) UITapGestureRecognizer *twoFingerTap;
 @property (nonatomic) UIPanGestureRecognizer *pan;
+#if !TARGET_OS_TV
+@property (nonatomic) UITapGestureRecognizer *twoFingerTap;
 @property (nonatomic) UIPinchGestureRecognizer *pinch;
 @property (nonatomic) UIRotationGestureRecognizer *rotate;
 @property (nonatomic) UILongPressGestureRecognizer *quickZoom;
 @property (nonatomic) UIPanGestureRecognizer *twoFingerDrag;
+#endif
 /// Mapping from reusable identifiers to annotation images.
 @property (nonatomic) NS_MUTABLE_DICTIONARY_OF(NSString *, MGLAnnotationImage *) *annotationImagesByIdentifier;
 /// Currently shown popover representing the selected annotation.
@@ -498,10 +504,13 @@ public:
     //
     _pan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePanGesture:)];
     _pan.delegate = self;
+#if !TARGET_OS_TV
     _pan.maximumNumberOfTouches = 1;
+#endif
     [self addGestureRecognizer:_pan];
     _scrollEnabled = YES;
 
+#if !TARGET_OS_TV
     _pinch = [[UIPinchGestureRecognizer alloc] initWithTarget:self action:@selector(handlePinchGesture:)];
     _pinch.delegate = self;
     [self addGestureRecognizer:_pinch];
@@ -511,6 +520,7 @@ public:
     _rotate.delegate = self;
     [self addGestureRecognizer:_rotate];
     _rotateEnabled = YES;
+#endif
 
     _doubleTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleDoubleTapGesture:)];
     _doubleTap.numberOfTapsRequired = 2;
@@ -521,6 +531,7 @@ public:
     _singleTapGestureRecognizer.delegate = self;
     [self addGestureRecognizer:_singleTapGestureRecognizer];
 
+#if !TARGET_OS_TV
     _twoFingerTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTwoFingerTapGesture:)];
     _twoFingerTap.numberOfTouchesRequired = 2;
     [_twoFingerTap requireGestureRecognizerToFail:_pinch];
@@ -535,14 +546,17 @@ public:
     [_twoFingerDrag requireGestureRecognizerToFail:_pan];
     [self addGestureRecognizer:_twoFingerDrag];
     _pitchEnabled = YES;
+#endif
 
     _decelerationRate = MGLMapViewDecelerationRateNormal;
 
+#if !TARGET_OS_TV
     _quickZoom = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleQuickZoomGesture:)];
     _quickZoom.numberOfTapsRequired = 1;
     _quickZoom.minimumPressDuration = 0;
     [_quickZoom requireGestureRecognizerToFail:_doubleTap];
     [self addGestureRecognizer:_quickZoom];
+#endif
 
     // observe app activity
     //
@@ -551,8 +565,10 @@ public:
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(wakeGL:) name:UIApplicationWillEnterForegroundNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(wakeGL:) name:UIApplicationDidBecomeActiveNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didReceiveMemoryWarning) name:UIApplicationDidReceiveMemoryWarningNotification object:nil];
+#if !TARGET_OS_TV
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(deviceOrientationDidChange:) name:UIDeviceOrientationDidChangeNotification object:nil];
     [[UIDevice currentDevice] beginGeneratingDeviceOrientationNotifications];
+#endif
 
     // set initial position
     //
@@ -566,9 +582,11 @@ public:
     _pendingLongitude = NAN;
     _targetCoordinate = kCLLocationCoordinate2DInvalid;
 
+#if !TARGET_OS_TV
     if ([UIApplication sharedApplication].applicationState != UIApplicationStateBackground) {
         [MGLMapboxEvents pushEvent:MGLEventTypeMapLoad withAttributes:@{}];
     }
+#endif
 }
 
 - (mbgl::Size)size
@@ -656,7 +674,9 @@ public:
 {
     [_reachability stopNotifier];
 
+#if !TARGET_OS_TV
     [[UIDevice currentDevice] endGeneratingDeviceOrientationNotifications];
+#endif
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [_attributionButton removeObserver:self forKeyPath:@"hidden"];
 
@@ -887,7 +907,9 @@ public:
 
     if (self.compassView.alpha)
     {
+#if !TARGET_OS_TV
         [self updateHeadingForDeviceOrientation];
+#endif
         [self updateCompass];
     }
 
@@ -1047,10 +1069,12 @@ public:
     [super didMoveToSuperview];
 }
 
+#if !TARGET_OS_TV
 - (void)deviceOrientationDidChange:(__unused NSNotification *)notification
 {
     [self setNeedsLayout];
 }
+#endif
 
 - (void)sleepGL:(__unused NSNotification *)notification
 {
@@ -1062,7 +1086,9 @@ public:
 
         [self validateLocationServices];
 
+#if !TARGET_OS_TV
         [MGLMapboxEvents flush];
+#endif
 
         _displayLink.paused = YES;
 
@@ -1109,7 +1135,9 @@ public:
 
         [self validateLocationServices];
 
+#if !TARGET_OS_TV
         [MGLMapboxEvents pushEvent:MGLEventTypeMapLoad withAttributes:@{}];
+#endif
     }
 }
 
@@ -1141,11 +1169,13 @@ public:
 {
     [self resetNorthAnimated:YES];
 
+#if !TARGET_OS_TV
     if (self.userTrackingMode == MGLUserTrackingModeFollowWithHeading ||
         self.userTrackingMode == MGLUserTrackingModeFollowWithCourse)
     {
         self.userTrackingMode = MGLUserTrackingModeFollow;
     }
+#endif
 }
 
 - (void)touchesBegan:(__unused NS_SET_OF(UITouch *) *)touches withEvent:(__unused UIEvent *)event
@@ -1190,7 +1220,9 @@ public:
     
     if (pan.state == UIGestureRecognizerStateBegan)
     {
+#if !TARGET_OS_TV
         [self trackGestureEvent:MGLEventGesturePanStart forRecognizer:pan];
+#endif
 
         self.userTrackingMode = MGLUserTrackingModeNone;
 
@@ -1235,6 +1267,7 @@ public:
 
         [self notifyGestureDidEndWithDrift:drift];
 
+#if !TARGET_OS_TV
         // metrics: pan end
         CGPoint pointInView = CGPointMake([pan locationInView:pan.view].x, [pan locationInView:pan.view].y);
         CLLocationCoordinate2D panCoordinate = [self convertPoint:pointInView toCoordinateFromView:pan.view];
@@ -1245,10 +1278,12 @@ public:
             MGLEventKeyLongitude: @(panCoordinate.longitude),
             MGLEventKeyZoomLevel: @(zoom)
         }];
+#endif
     }
 
 }
 
+#if !TARGET_OS_TV
 - (void)handlePinchGesture:(UIPinchGestureRecognizer *)pinch
 {
     if ( ! self.isZoomEnabled) return;
@@ -1428,6 +1463,7 @@ public:
         }
     }
 }
+#endif
 
 - (void)handleSingleTapGesture:(UITapGestureRecognizer *)singleTap
 {
@@ -1435,7 +1471,9 @@ public:
     {
         return;
     }
+#if !TARGET_OS_TV
     [self trackGestureEvent:MGLEventGestureSingleTap forRecognizer:singleTap];
+#endif
 
     if (self.mapViewProxyAccessibilityElement.accessibilityElementIsFocused)
     {
@@ -1553,7 +1591,9 @@ public:
         if (![self.delegate respondsToSelector:@selector(mapView:shouldChangeFromCamera:toCamera:)] ||
             [self.delegate mapView:self shouldChangeFromCamera:oldCamera toCamera:toCamera])
         {
+#if !TARGET_OS_TV
             [self trackGestureEvent:MGLEventGestureDoubleTap forRecognizer:doubleTap];
+#endif
             
             mbgl::ScreenCoordinate center(gesturePoint.x, gesturePoint.y);
             _mbglMap->setZoom(newZoom, center, MGLDurationFromTimeInterval(MGLAnimationDuration));
@@ -1568,6 +1608,7 @@ public:
     }
 }
 
+#if !TARGET_OS_TV
 - (void)handleTwoFingerTapGesture:(UITapGestureRecognizer *)twoFingerTap
 {
     if ( ! self.isZoomEnabled) return;
@@ -1695,6 +1736,7 @@ public:
     }
 
 }
+#endif
 
 - (MGLMapCamera *)cameraByPanningWithTranslation:(CGPoint)endPoint panGesture:(UIPanGestureRecognizer *)pan
 {
@@ -1770,6 +1812,7 @@ public:
 {
     if ([gestureRecognizer isKindOfClass:[UIPanGestureRecognizer class]])
     {
+#if !TARGET_OS_TV
         UIPanGestureRecognizer *panGesture = (UIPanGestureRecognizer *)gestureRecognizer;
 
         if (panGesture.minimumNumberOfTouches == 2)
@@ -1784,6 +1827,7 @@ public:
                 return NO;
             }
         }
+#endif
     }
     else if (gestureRecognizer == _singleTapGestureRecognizer)
     {
@@ -1842,6 +1886,7 @@ public:
     UIAccessibilityPostNotification(UIAccessibilityLayoutChangedNotification, calloutView);
 }
 
+#if !TARGET_OS_TV
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer
 {
     NSArray *validSimultaneousGestures = @[ self.pan, self.pinch, self.rotate ];
@@ -1862,6 +1907,7 @@ public:
         MGLEventKeyGestureID: gestureID
     }];
 }
+#endif
 
 #pragma mark - Attribution -
 
@@ -1872,7 +1918,12 @@ public:
                                                                                    message:nil
                                                                             preferredStyle:UIAlertControllerStyleActionSheet];
     
-    NSArray *attributionInfos = [self.style attributionInfosWithFontSize:[UIFont buttonFontSize]
+#if TARGET_OS_TV
+    CGFloat fontSize = 0;
+#else
+    CGFloat fontSize = [UIFont buttonFontSize];
+#endif
+    NSArray *attributionInfos = [self.style attributionInfosWithFontSize:fontSize
                                                                linkColor:nil];
     for (MGLAttributionInfo *info in attributionInfos)
     {
@@ -1894,6 +1945,7 @@ public:
         [attributionController addAction:action];
     }
     
+#if !TARGET_OS_TV
     NSString *telemetryTitle = NSLocalizedStringWithDefaultValue(@"TELEMETRY_NAME", nil, nil, @"Mapbox Telemetry", @"Action in attribution sheet");
     UIAlertAction *telemetryAction = [UIAlertAction actionWithTitle:telemetryTitle
                                                               style:UIAlertActionStyleDefault
@@ -1901,6 +1953,7 @@ public:
         [self presentTelemetryAlertController];
     }];
     [attributionController addAction:telemetryAction];
+#endif
     
     NSString *cancelTitle = NSLocalizedStringWithDefaultValue(@"CANCEL", nil, nil, @"Cancel", @"");
     UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:cancelTitle
@@ -1920,6 +1973,7 @@ public:
                                completion:NULL];
 }
 
+#if !TARGET_OS_TV
 - (void)presentTelemetryAlertController
 {
     NSString *title = NSLocalizedStringWithDefaultValue(@"TELEMETRY_TITLE", nil, nil, @"Make Mapbox Maps Better", @"Telemetry prompt title");
@@ -1970,6 +2024,7 @@ public:
                                                  animated:YES
                                                completion:NULL];
 }
+#endif
 
 #pragma mark - Properties -
 
@@ -1977,12 +2032,14 @@ public:
 {
     if ([keyPath isEqualToString:@"hidden"] && object == _attributionButton)
     {
+#if !TARGET_OS_TV
         NSNumber *hiddenNumber = change[NSKeyValueChangeNewKey];
         BOOL attributionButtonWasHidden = [hiddenNumber boolValue];
         if (attributionButtonWasHidden)
         {
             [MGLMapboxEvents ensureMetricsOptoutExists];
         }
+#endif
     }
     else if ([keyPath isEqualToString:@"coordinate"] && [object conformsToProtocol:@protocol(MGLAnnotation)] && ![object isKindOfClass:[MGLMultiPoint class]])
     {
@@ -2153,10 +2210,12 @@ public:
 - (void)setZoomEnabled:(BOOL)zoomEnabled
 {
     _zoomEnabled = zoomEnabled;
-    self.pinch.enabled = zoomEnabled;
     self.doubleTap.enabled = zoomEnabled;
+#if !TARGET_OS_TV
+    self.pinch.enabled = zoomEnabled;
     self.quickZoom.enabled = zoomEnabled;
     self.twoFingerTap.enabled = zoomEnabled;
+#endif
 }
 
 - (void)setScrollEnabled:(BOOL)scrollEnabled
@@ -2165,6 +2224,7 @@ public:
     self.pan.enabled = scrollEnabled;
 }
 
+#if !TARGET_OS_TV
 - (void)setRotateEnabled:(BOOL)rotateEnabled
 {
     _rotateEnabled = rotateEnabled;
@@ -2176,6 +2236,7 @@ public:
     _pitchEnabled = pitchEnabled;
     self.twoFingerDrag.enabled = pitchEnabled;
 }
+#endif
 
 #pragma mark - Accessibility -
 
@@ -2678,10 +2739,12 @@ public:
 {
     if ( ! animated && ! self.rotationAllowed) return;
 
+#if !TARGET_OS_TV
     if (self.userTrackingMode == MGLUserTrackingModeFollowWithHeading)
     {
         self.userTrackingMode = MGLUserTrackingModeFollow;
     }
+#endif
 
     [self _setDirection:direction animated:animated];
 }
@@ -4124,7 +4187,9 @@ public:
 
             if ([[NSBundle mainBundle] objectForInfoDictionaryKey:@"NSLocationAlwaysUsageDescription"])
             {
+#if !TARGET_OS_TV
                 [self.locationManager requestAlwaysAuthorization];
+#endif
             }
             else if ([[NSBundle mainBundle] objectForInfoDictionaryKey:@"NSLocationWhenInUseUsageDescription"])
             {
@@ -4132,19 +4197,25 @@ public:
             }
         }
 
+#if !TARGET_OS_TV
         self.locationManager.headingFilter = 5.0;
+#endif
         self.locationManager.delegate = self;
+        
+#if !TARGET_OS_TV
         [self.locationManager startUpdatingLocation];
-
         if (self.userTrackingMode == MGLUserTrackingModeFollowWithHeading)
         {
             [self.locationManager startUpdatingHeading];
         }
+#endif
     }
     else if ( ! shouldEnableLocationServices && self.locationManager)
     {
+#if !TARGET_OS_TV
         [self.locationManager stopUpdatingLocation];
         [self.locationManager stopUpdatingHeading];
+#endif
         self.locationManager.delegate = nil;
         self.locationManager = nil;
     }
@@ -4246,6 +4317,7 @@ public:
 {
     if (mode == _userTrackingMode) return;
 
+#if !TARGET_OS_TV
     if ((mode == MGLUserTrackingModeFollowWithHeading || mode == MGLUserTrackingModeFollowWithCourse) &&
         ! CLLocationCoordinate2DIsValid(self.userLocation.coordinate))
     {
@@ -4253,6 +4325,7 @@ public:
     }
 
     MGLUserTrackingMode oldMode = _userTrackingMode;
+#endif
     [self willChangeValueForKey:@"userTrackingMode"];
     _userTrackingMode = mode;
     [self didChangeValueForKey:@"userTrackingMode"];
@@ -4263,7 +4336,9 @@ public:
         {
             self.userTrackingState = MGLUserTrackingStatePossible;
 
+#if !TARGET_OS_TV
             [self.locationManager stopUpdatingHeading];
+#endif
 
             // Immediately update the annotation view; other cases update inside
             // the locationManager:didUpdateLocations: method.
@@ -4272,12 +4347,16 @@ public:
             break;
         }
         case MGLUserTrackingModeFollow:
+#if !TARGET_OS_TV
         case MGLUserTrackingModeFollowWithCourse:
+#endif
         {
             self.userTrackingState = animated ? MGLUserTrackingStatePossible : MGLUserTrackingStateChanged;
             self.showsUserLocation = YES;
 
+#if !TARGET_OS_TV
             [self.locationManager stopUpdatingHeading];
+#endif
 
             CLLocation *location = self.userLocation.location;
             if (location && self.userLocationAnnotationView)
@@ -4287,6 +4366,7 @@ public:
 
             break;
         }
+#if !TARGET_OS_TV
         case MGLUserTrackingModeFollowWithHeading:
         {
             if (oldMode == MGLUserTrackingModeNone)
@@ -4312,6 +4392,7 @@ public:
 
             break;
         }
+#endif
     }
 
     if ([self.delegate respondsToSelector:@selector(mapView:didChangeUserTrackingMode:animated:)])
@@ -4338,6 +4419,7 @@ public:
     }
 }
 
+#if !TARGET_OS_TV
 - (void)setTargetCoordinate:(CLLocationCoordinate2D)targetCoordinate
 {
     [self setTargetCoordinate:targetCoordinate animated:YES];
@@ -4359,6 +4441,7 @@ public:
         }
     }
 }
+#endif
 
 - (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray *)locations
 {
@@ -4373,7 +4456,10 @@ public:
     if ( ! _showsUserLocation || ! newLocation || ! CLLocationCoordinate2DIsValid(newLocation.coordinate)) return;
 
     if (! oldLocation || ! CLLocationCoordinate2DIsValid(oldLocation.coordinate) || [newLocation distanceFromLocation:oldLocation]
-        || oldLocation.course != newLocation.course)
+#if !TARGET_OS_TV
+        || oldLocation.course != newLocation.course
+#endif
+        )
     {
         if ( ! oldLocation || ! CLLocationCoordinate2DIsValid(oldLocation.coordinate) || self.userTrackingState != MGLUserTrackingStateBegan)
         {
@@ -4418,11 +4504,17 @@ public:
     CGPoint correctPoint = self.userLocationAnnotationViewCenter;
     CGPoint currentPoint = [self convertCoordinate:self.userLocation.coordinate toPointToView:self];
     if (std::abs(currentPoint.x - correctPoint.x) <= 1.0 && std::abs(currentPoint.y - correctPoint.y) <= 1.0
-        && self.userTrackingMode != MGLUserTrackingModeFollowWithCourse)
+#if !TARGET_OS_TV
+        && self.userTrackingMode != MGLUserTrackingModeFollowWithCourse
+#endif
+        )
     {
         return;
     }
 
+#if TARGET_OS_TV
+    if (NO) {}
+#else
     if (self.userTrackingMode == MGLUserTrackingModeFollowWithCourse
         && CLLocationCoordinate2DIsValid(self.targetCoordinate))
     {
@@ -4432,6 +4524,7 @@ public:
             [self didUpdateLocationWithTargetAnimated:animated];
         }
     }
+#endif
     else if (self.userTrackingState == MGLUserTrackingStatePossible)
     {
         // The first location update is often a great distance away from the
@@ -4489,6 +4582,7 @@ public:
     }];
 }
 
+#if !TARGET_OS_TV
 /// Changes the viewport based on a location update in the presence of a target
 /// coordinate that must also be displayed on the map concurrently.
 - (void)didUpdateLocationWithTargetAnimated:(BOOL)animated
@@ -4525,6 +4619,7 @@ public:
          animationTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionLinear]
                completionHandler:completion];
 }
+#endif
 
 /// Returns the edge padding to apply when moving the map to a tracked location.
 - (UIEdgeInsets)edgePaddingForFollowing
@@ -4557,6 +4652,7 @@ public:
 - (CLLocationDirection)directionByFollowingWithCourse
 {
     CLLocationDirection direction = -1;
+#if !TARGET_OS_TV
     if (self.userTrackingMode == MGLUserTrackingModeFollowWithCourse)
     {
         if (CLLocationCoordinate2DIsValid(self.targetCoordinate))
@@ -4582,6 +4678,7 @@ public:
             }
         }
     }
+#endif
     return direction;
 }
 
@@ -4594,6 +4691,7 @@ public:
     return self.displayHeadingCalibration;
 }
 
+#if !TARGET_OS_TV
 - (void)locationManager:(__unused CLLocationManager *)manager didUpdateHeading:(CLHeading *)newHeading
 {
     if ( ! _showsUserLocation || self.pan.state == UIGestureRecognizerStateBegan || newHeading.headingAccuracy < 0) return;
@@ -4615,6 +4713,7 @@ public:
         [self _setDirection:headingDirection animated:YES];
     }
 }
+#endif
 
 - (void)locationManager:(__unused CLLocationManager *)manager didFailWithError:(NSError *)error
 {
@@ -4630,6 +4729,7 @@ public:
     }
 }
 
+#if !TARGET_OS_TV
 - (void)updateHeadingForDeviceOrientation
 {
     if (self.locationManager)
@@ -4662,6 +4762,7 @@ public:
         }
     }
 }
+#endif
 
 #pragma mark Data
 
@@ -4751,6 +4852,7 @@ public:
 
 - (void)unrotateIfNeededForGesture
 {
+#if !TARGET_OS_TV
     // Avoid contention with in-progress gestures.
     UIGestureRecognizerState state = self.pinch.state;
     if (self.direction != 0
@@ -4768,6 +4870,7 @@ public:
             [self resetNorthAnimated:YES];
         }
     }
+#endif
 }
 
 /// Rotate back to true north if the map view is zoomed too far out.
@@ -5646,6 +5749,25 @@ private:
     self.scrollEnabled = allowsScrolling;
 }
 
+#if TARGET_OS_TV
+- (BOOL)allowsRotating
+{
+    return NO;
+}
+
+- (void)setAllowsRotating:(BOOL)allowsRotating
+{
+}
+
+- (BOOL)allowsTilting
+{
+    return NO;
+}
+
+- (void)setAllowsTilting:(BOOL)allowsTilting
+{
+}
+#else
 + (NS_SET_OF(NSString *) *)keyPathsForValuesAffectingAllowsRotating
 {
     return [NSSet setWithObject:@"rotateEnabled"];
@@ -5675,5 +5797,6 @@ private:
 {
     self.pitchEnabled = allowsTilting;
 }
+#endif
 
 @end
