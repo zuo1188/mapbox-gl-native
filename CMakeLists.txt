@@ -50,6 +50,7 @@ mason_use(earcut VERSION 0.12.1 HEADER_ONLY)
 mason_use(protozero VERSION 1.4.2 HEADER_ONLY)
 mason_use(pixelmatch VERSION 0.10.0 HEADER_ONLY)
 mason_use(geojson VERSION 0.4.0 HEADER_ONLY)
+mason_use(vectortile VERSION 1.0.0-rc4 HEADER_ONLY)
 mason_use(polylabel VERSION 1.0.2 HEADER_ONLY)
 mason_use(wagyu VERSION 0.4.1 HEADER_ONLY)
 
