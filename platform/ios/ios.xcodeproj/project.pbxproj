@@ -130,6 +130,7 @@
 		35E79F201D41266300957B9E /* MGLStyleLayer_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = 35E79F1F1D41266300957B9E /* MGLStyleLayer_Private.h */; };
 		35E79F211D41266300957B9E /* MGLStyleLayer_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = 35E79F1F1D41266300957B9E /* MGLStyleLayer_Private.h */; };
 		36F1153D1D46080700878E1A /* libmbgl-core.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 36F1153B1D46080700878E1A /* libmbgl-core.a */; };
+		3EA8545B1E955EEF00D716EE /* LimeGreenStyleLayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 3EA8545A1E955EEF00D716EE /* LimeGreenStyleLayer.m */; };
 		400533011DB0862B0069F638 /* NSArray+MGLAdditions.h in Headers */ = {isa = PBXBuildFile; fileRef = 400532FF1DB0862B0069F638 /* NSArray+MGLAdditions.h */; };
 		400533021DB0862B0069F638 /* NSArray+MGLAdditions.mm in Sources */ = {isa = PBXBuildFile; fileRef = 400533001DB0862B0069F638 /* NSArray+MGLAdditions.mm */; };
 		400533031DB086490069F638 /* NSArray+MGLAdditions.mm in Sources */ = {isa = PBXBuildFile; fileRef = 400533001DB0862B0069F638 /* NSArray+MGLAdditions.mm */; };
@@ -608,6 +609,8 @@
 		35E79F1F1D41266300957B9E /* MGLStyleLayer_Private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MGLStyleLayer_Private.h; sourceTree = "<group>"; };
 		36F1153B1D46080700878E1A /* libmbgl-core.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libmbgl-core.a"; path = "build/Debug-iphoneos/libmbgl-core.a"; sourceTree = "<group>"; };
 		36F1153C1D46080700878E1A /* libmbgl-platform-ios.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libmbgl-platform-ios.a"; path = "build/Debug-iphoneos/libmbgl-platform-ios.a"; sourceTree = "<group>"; };
+		3EA854591E955EEF00D716EE /* LimeGreenStyleLayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LimeGreenStyleLayer.h; sourceTree = "<group>"; };
+		3EA8545A1E955EEF00D716EE /* LimeGreenStyleLayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LimeGreenStyleLayer.m; sourceTree = "<group>"; };
 		400532FF1DB0862B0069F638 /* NSArray+MGLAdditions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSArray+MGLAdditions.h"; sourceTree = "<group>"; };
 		400533001DB0862B0069F638 /* NSArray+MGLAdditions.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "NSArray+MGLAdditions.mm"; sourceTree = "<group>"; };
 		4018B1C31CDC277F00F666AF /* MGLAnnotationView_Private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MGLAnnotationView_Private.h; sourceTree = "<group>"; };
@@ -1144,6 +1147,8 @@
 				354B839B1D2E9B48005D9406 /* MBXUserLocationAnnotationView.m */,
 				DA1DC9681CB6C6B7006E619F /* MBXOfflinePacksTableViewController.h */,
 				DA1DC9691CB6C6B7006E619F /* MBXOfflinePacksTableViewController.m */,
+				3EA854591E955EEF00D716EE /* LimeGreenStyleLayer.h */,
+				3EA8545A1E955EEF00D716EE /* LimeGreenStyleLayer.m */,
 				DA1DC9531CB6C1C2006E619F /* MBXViewController.h */,
 				DA1DC99A1CB6E064006E619F /* MBXViewController.m */,
 				632281DD1E6F855900D75A5D /* MBXEmbeddedMapViewController.h */,
@@ -2097,6 +2102,7 @@
 				DA1DC96B1CB6C6B7006E619F /* MBXOfflinePacksTableViewController.m in Sources */,
 				DA1DC96A1CB6C6B7006E619F /* MBXCustomCalloutView.m in Sources */,
 				DA1DC99B1CB6E064006E619F /* MBXViewController.m in Sources */,
+				3EA8545B1E955EEF00D716EE /* LimeGreenStyleLayer.m in Sources */,
 				40FDA76B1CCAAA6800442548 /* MBXAnnotationView.m in Sources */,
 				632281DF1E6F855900D75A5D /* MBXEmbeddedMapViewController.m in Sources */,
 			);

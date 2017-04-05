@@ -11,6 +11,8 @@
 
 #import <objc/runtime.h>
 
+#import "LimeGreenStyleLayer.h"
+
 static const CLLocationCoordinate2D WorldTourDestinations[] = {
     { .latitude = 38.9131982, .longitude = -77.0325453144239 },
     { .latitude = 37.7757368, .longitude = -122.4135302 },
@@ -1821,6 +1823,23 @@ typedef NS_ENUM(NSInteger, MBXSettingsMiscellaneousRows) {
     // that a device with an English-language locale is already effectively
     // using locale-based country labels.
     _usingLocaleBasedCountryLabels = [[self bestLanguageForUser] isEqualToString:@"en"];
+    
+    LimeGreenStyleLayer *layer = [[LimeGreenStyleLayer alloc] initWithIdentifier:@"mbx-custom"];
+    MGLStyleLayer *symbolLayer = [style layerWithIdentifier:@"admin-3-4-boundaries"];
+    
+    [style insertLayer:layer belowLayer:symbolLayer];
+    
+    NSURL *url = [NSURL URLWithString:@"mapbox://examples.69ytlgls"];
+    
+    MGLVectorSource *source = [[MGLVectorSource alloc] initWithIdentifier:@"state-source" configurationURL:url];
+    [style addSource:source];
+    
+    MGLFillStyleLayer *fillLayer = [[MGLFillStyleLayer alloc] initWithIdentifier:@"states" source:source];
+    fillLayer.sourceLayerIdentifier = @"stateData_2-dx853g";
+    fillLayer.fillColor = [MGLStyleValue valueWithRawValue:[UIColor redColor]];
+    //    [style addLayer:fillLayer];
+    [style insertLayer:fillLayer aboveLayer:layer];
+//    NSLog(@"%@", style.layers);
 }
 
 - (void)mapViewRegionIsChanging:(MGLMapView *)mapView
