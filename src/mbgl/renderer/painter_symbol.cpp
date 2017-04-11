@@ -40,13 +40,13 @@ void Painter::renderSymbol(PaintParameters& parameters,
     {
         // We clip symbols to their tile extent in still mode.
         const bool needsClipping = frame.mapMode == MapMode::Still;
-
+        
         program.draw(
             context,
             gl::Triangles(),
-            values_.pitchAlignment == AlignmentType::Map
-                ? depthModeForSublayer(0, gl::DepthMode::ReadOnly)
-                : gl::DepthMode::disabled(),
+//            values_.pitchAlignment == AlignmentType::Map
+            depthModeForSublayer(0, gl::DepthMode::ReadOnly),
+//                : gl::DepthMode::disabled(),
             needsClipping
                 ? stencilModeForClipping(tile.clip)
                 : gl::StencilMode::disabled(),

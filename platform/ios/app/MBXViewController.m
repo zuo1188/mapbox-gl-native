@@ -161,7 +161,8 @@ typedef NS_ENUM(NSInteger, MBXSettingsMiscellaneousRows) {
     [self restoreState:nil];
 
     self.debugLoggingEnabled = [[NSUserDefaults standardUserDefaults] boolForKey:@"MGLMapboxMetricsDebugLoggingEnabled"];
-
+    
+    self.mapView.pitchEnabled = NO;
     self.hudLabel.hidden = YES;
 
     if ([MGLAccountManager accessToken].length)
@@ -1819,14 +1820,25 @@ typedef NS_ENUM(NSInteger, MBXSettingsMiscellaneousRows) {
 
 - (void)mapView:(MGLMapView *)mapView didFinishLoadingStyle:(MGLStyle *)style
 {
+    
+//    for (MGLStyleLayer *layer in style.layers) {
+//        if ([layer isKindOfClass:[MGLSymbolStyleLayer class]]) {
+////            layer = [MGLSymbolStyleLayer class];
+////            layer = (MGLSymbolStyleLayer *)layer;
+//            MGLSymbolStyleLayer *newLayer = (MGLSymbolStyleLayer *)layer;
+//            [style removeLayer:layer];
+//            newLayer.textPitchAlignment = MGLTextPitchAlignmentMap;
+//            [style addLayer:newLayer];
+//        }
+//    }
     // Default Mapbox styles use {name_en} as their label language, which means
     // that a device with an English-language locale is already effectively
     // using locale-based country labels.
     _usingLocaleBasedCountryLabels = [[self bestLanguageForUser] isEqualToString:@"en"];
     
     LimeGreenStyleLayer *layer = [[LimeGreenStyleLayer alloc] initWithIdentifier:@"mbx-custom"];
-    MGLStyleLayer *symbolLayer = [style layerWithIdentifier:@"admin-3-4-boundaries"];
-    
+    MGLSymbolStyleLayer *symbolLayer = [style layerWithIdentifier:@"admin-3-4-boundaries"];
+//    symbolLayer.textPitchAlignment = MGLTextPitchAlignmentMap;
     [style insertLayer:layer belowLayer:symbolLayer];
     
     NSURL *url = [NSURL URLWithString:@"mapbox://examples.69ytlgls"];
@@ -1837,8 +1849,11 @@ typedef NS_ENUM(NSInteger, MBXSettingsMiscellaneousRows) {
     MGLFillStyleLayer *fillLayer = [[MGLFillStyleLayer alloc] initWithIdentifier:@"states" source:source];
     fillLayer.sourceLayerIdentifier = @"stateData_2-dx853g";
     fillLayer.fillColor = [MGLStyleValue valueWithRawValue:[UIColor redColor]];
+    MGLSymbolStyleLayer *symbolLayer2 = [style layerWithIdentifier:@"country-label-lg"];
+//    symbolLayer2.textPitchAlignment = MGLTextPitchAlignmentMap;
     //    [style addLayer:fillLayer];
-    [style insertLayer:fillLayer aboveLayer:layer];
+    fillLayer.fillOpacity = [MGLStyleValue valueWithRawValue:@1];
+    [style insertLayer:fillLayer aboveLayer:symbolLayer2];
 //    NSLog(@"%@", style.layers);
 }
 
