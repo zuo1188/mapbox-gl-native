@@ -9,6 +9,8 @@
 
 - (mbgl::style::PropertyValue<mbgl::Color>)mgl_colorPropertyValue;
 
+- (CGFloat)cap_rgba:(CGFloat)num;
+
 + (UIColor *)mgl_colorWithColor:(mbgl::Color)color;
 
 @end

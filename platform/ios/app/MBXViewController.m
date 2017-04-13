@@ -871,7 +871,10 @@ typedef NS_ENUM(NSInteger, MBXSettingsMiscellaneousRows) {
     MGLStyleValue *waterColorFunction = [MGLStyleValue<UIColor *> valueWithInterpolationMode:MGLInterpolationModeExponential
                                                                                  cameraStops:waterColorStops
                                                                                      options: nil];
-    waterLayer.fillColor = waterColorFunction;
+//    waterLayer.fillColor = waterColorFunction;
+    
+    // jk
+    waterLayer.fillColor = [MGLStyleValue valueWithRawValue:[UIColor colorWithRed:40 green:0 blue:10 alpha:1]];
 
     NSDictionary *fillAntialiasedStops = @{@11: [MGLStyleValue<NSNumber *> valueWithRawValue:@YES],
                                            @12: [MGLStyleValue<NSNumber *> valueWithRawValue:@NO],
