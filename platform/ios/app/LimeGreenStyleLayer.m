@@ -41,8 +41,8 @@
     glDisable(GL_STENCIL_TEST);
 //    glDisable(GL_DEPTH_TEST);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
+//    glEnable(GL_DEPTH_TEST);
+//    glDepthFunc(GL_LEQUAL);
 }
 
 - (void)willMoveFromMapView:(MGLMapView *)mapView {
