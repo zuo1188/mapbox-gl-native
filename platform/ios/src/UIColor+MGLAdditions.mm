@@ -7,8 +7,14 @@
     CGFloat r, g, b, a;
     
     [self getRed:&r green:&g blue:&b alpha:&a];
-    
-    return { (float)[self cap_rgba:r], (float)[self cap_rgba:g], (float)[self cap_rgba:b], (float)[self cap_rgba:a] };
+    for (NSNumber *num in @[@(r), @(g), @(b), @(a)]) {
+        if ((MAX(MIN(num.floatValue, 1), 0)) != num.floatValue) {
+            [NSException raise:NSInvalidArgumentException format:@""];
+//            num = @0;
+        }
+    }
+    return { (float)r, (float)g, (float)b, (float)a };
+//    return { (float)[self cap_rgba:r], (float)[self cap_rgba:g], (float)[self cap_rgba:b], (float)[self cap_rgba:a] };
 }
 
 - (mbgl::style::PropertyValue<mbgl::Color>)mgl_colorPropertyValue
