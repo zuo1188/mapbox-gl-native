@@ -7,6 +7,7 @@
     CGFloat r, g, b, a;
     
     [self getRed:&r green:&g blue:&b alpha:&a];
+    
     return { (float)[self cap_rgba:r], (float)[self cap_rgba:g], (float)[self cap_rgba:b], (float)[self cap_rgba:a] };
 }
 
@@ -18,7 +19,7 @@
 
 - (CGFloat)cap_rgba:(CGFloat)num
 {
-    return (num > 1.0) ? 1.0 : (num < 0.0) ? 0.0 : num;
+    return MAX(MIN(num, 1), 0);
 }
 
 + (UIColor *)mgl_colorWithColor:(mbgl::Color)color
