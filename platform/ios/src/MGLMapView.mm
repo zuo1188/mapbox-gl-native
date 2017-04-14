@@ -104,7 +104,9 @@ const double MGLMinimumZoomLevelForUserTracking = 10.5;
 /// Initial zoom level when entering user tracking mode from a low zoom level.
 const double MGLDefaultZoomLevelForUserTracking = 14.0;
 
-const NSUInteger MGLTargetFrameInterval = 1;  // Target FPS will be 60 divided by this value
+//const NSUInteger MGLTargetFrameInterval = 1;  // Target FPS will be 60 divided by this value
+/// Target and maximum render frames per second.
+const CGFloat MGLTargetFPS = 60;
 
 /// Tolerance for snapping to true north, measured in degrees in either direction.
 const CLLocationDirection MGLToleranceForSnappingToNorth = 7;
@@ -296,7 +298,8 @@ public:
     CLLocationDegrees _pendingLatitude;
     CLLocationDegrees _pendingLongitude;
 
-    CADisplayLink *_displayLink;
+//    CADisplayLink *_displayLink;
+    NSDate *_lastRenderDate;
     BOOL _needsDisplayRefresh;
 
     NSUInteger _changeDelimiterSuppressionDepth;
@@ -608,6 +611,8 @@ public:
     [_glView bindDrawable];
     [self insertSubview:_glView atIndex:0];
     _glView.contentMode = UIViewContentModeCenter;
+
+    NSLog(@"GL view created");
 }
 
 - (UIImage *)compassImage
@@ -667,7 +672,8 @@ public:
         [self removeAnnotations:annotations];
     }
 
-    [self validateDisplayLink];
+//    [self validateDisplayLink];
+    _lastRenderDate = [NSDate distantFuture];
 
     if (_mbglMap)
     {
@@ -981,12 +987,27 @@ public:
 
 #pragma mark - Life Cycle -
 
-- (void)updateFromDisplayLink
+//- (void)updateFromDisplayLink
+//{
+//    MGLAssertIsMainThread();
+//
+//    if (_needsDisplayRefresh)
+//    {
+//        _needsDisplayRefresh = NO;
+//
+//        [self.glView display];
+//    }
+//}
+
+- (void)renderIfNeeded
 {
     MGLAssertIsMainThread();
 
-    if (_needsDisplayRefresh)
+    if ([[NSDate date] timeIntervalSinceDate:_lastRenderDate] >= 1/MGLTargetFPS && _needsDisplayRefresh)
     {
+//        NSLog(@"render pass");
+
+        _lastRenderDate = [NSDate date];
         _needsDisplayRefresh = NO;
 
         [self.glView display];
@@ -997,7 +1018,9 @@ public:
 {
     MGLAssertIsMainThread();
 
+    _lastRenderDate = [NSDate distantPast];
     _needsDisplayRefresh = YES;
+    [self renderIfNeeded];
 }
 
 - (void)willTerminate
@@ -1006,44 +1029,59 @@ public:
 
     if ( ! self.dormant)
     {
-        [self validateDisplayLink];
+//        [self validateDisplayLink];
+        _lastRenderDate = [NSDate distantFuture];
         self.dormant = YES;
         [self.glView deleteDrawable];
     }
 }
 
-- (void)validateDisplayLink
-{
-    BOOL isVisible = self.superview && self.window;
-    if (isVisible && ! _displayLink)
-    {
-        if (_mbglMap->getConstrainMode() == mbgl::ConstrainMode::None)
-        {
-            _mbglMap->setConstrainMode(mbgl::ConstrainMode::HeightOnly);
-        }
+//- (void)validateDisplayLink
+//{
+//    BOOL isVisible = self.superview && self.window;
+//    if (isVisible && ! _displayLink)
+//    {
+//        if (_mbglMap->getConstrainMode() == mbgl::ConstrainMode::None)
+//        {
+//            _mbglMap->setConstrainMode(mbgl::ConstrainMode::HeightOnly);
+//        }
+//
+//        _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(updateFromDisplayLink)];
+//        _displayLink.frameInterval = MGLTargetFrameInterval;
+//        [_displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
+//        _needsDisplayRefresh = YES;
+//        [self updateFromDisplayLink];
+//    }
+//    else if ( ! isVisible && _displayLink)
+//    {
+//        [_displayLink invalidate];
+//        _displayLink = nil;
+//    }
+//}
 
-        _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(updateFromDisplayLink)];
-        _displayLink.frameInterval = MGLTargetFrameInterval;
-        [_displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
-        _needsDisplayRefresh = YES;
-        [self updateFromDisplayLink];
-    }
-    else if ( ! isVisible && _displayLink)
+- (void)forceRenderIfEligible
+{
+    NSLog(@"forceRenderIfEligible");
+
+    if (self.superview && self.window)
     {
-        [_displayLink invalidate];
-        _displayLink = nil;
+        _lastRenderDate = [NSDate distantPast];
+        _needsDisplayRefresh = YES;
+        [self renderIfNeeded];
     }
 }
 
 - (void)didMoveToWindow
 {
-    [self validateDisplayLink];
+//    [self validateDisplayLink];
+    [self forceRenderIfEligible];
     [super didMoveToWindow];
 }
 
 - (void)didMoveToSuperview
 {
-    [self validateDisplayLink];
+//    [self validateDisplayLink];
+    [self forceRenderIfEligible];
     [super didMoveToSuperview];
 }
 
@@ -1064,7 +1102,8 @@ public:
 
         [MGLMapboxEvents flush];
 
-        _displayLink.paused = YES;
+//        _displayLink.paused = YES;
+        _lastRenderDate = [NSDate distantFuture];
 
         if ( ! self.glSnapshotView)
         {
@@ -1091,6 +1130,8 @@ public:
 
 - (void)wakeGL:(__unused NSNotification *)notification
 {
+    NSLog(@"wakeGL");
+
     MGLAssertIsMainThread();
 
     if (self.dormant && [UIApplication sharedApplication].applicationState != UIApplicationStateBackground)
@@ -1105,7 +1146,10 @@ public:
 
         [self.glView bindDrawable];
 
-        _displayLink.paused = NO;
+//        _displayLink.paused = NO;
+        _lastRenderDate = [NSDate distantPast];
+        _needsDisplayRefresh = YES;
+        [self renderIfNeeded];
 
         [self validateLocationServices];
 
@@ -1116,7 +1160,16 @@ public:
 - (void)setHidden:(BOOL)hidden
 {
     super.hidden = hidden;
-    _displayLink.paused = hidden;
+//    _displayLink.paused = hidden;
+    if (hidden)
+    {
+        _lastRenderDate = [NSDate distantFuture];
+    }
+    else
+    {
+        _lastRenderDate = [NSDate distantPast];
+        [self renderIfNeeded];
+    }
 }
 
 - (void)tintColorDidChange
@@ -4904,6 +4957,8 @@ public:
         return;
     }
 
+//    NSLog(@"mapViewDidFinishRenderingFrameFullyRendered");
+
     if (_isChangingAnnotationLayers)
     {
         _isChangingAnnotationLayers = NO;
@@ -4958,6 +5013,8 @@ public:
 
 - (void)updateAnnotationViews
 {
+    NSLog(@"updateAnnotationViews");
+
     BOOL delegateImplementsViewForAnnotation = [self.delegate respondsToSelector:@selector(mapView:viewForAnnotation:)];
 
     if (!delegateImplementsViewForAnnotation)
@@ -4979,6 +5036,7 @@ public:
     [offscreenAnnotations removeObjectsInArray:visibleAnnotations];
 
     // Update the center of visible annotation views
+    NSLog(@"%i visible annotations", visibleAnnotations.count);
     for (id<MGLAnnotation> annotation in visibleAnnotations)
     {
         // Defer to the shape/polygon styling delegate methods
@@ -5014,12 +5072,18 @@ public:
         if (annotationView)
         {
             annotationView.center = [self convertCoordinate:annotationContext.annotation.coordinate toPointToView:self];
+
+            if ([[visibleAnnotations firstObject] isEqual:annotation])
+            {
+                NSLog(@"%f, %f", annotationView.center.x, annotationView.center.y);
+            }
         }
     }
 
     MGLCoordinateBounds coordinateBounds = [self convertRect:viewPort toCoordinateBoundsFromView:self];
 
     // Enqueue (and move if required) offscreen annotation views
+    NSLog(@"%i offscreen annotations", offscreenAnnotations.count);
     for (id<MGLAnnotation> annotation in offscreenAnnotations)
     {
         // Defer to the shape/polygon styling delegate methods
@@ -5138,11 +5202,14 @@ public:
         userPoint = [self convertCoordinate:self.userLocation.coordinate toPointToView:self];
     }
 
+    NSLog(@"updating user location: %f, %f", userPoint.x, userPoint.y);
+
     if ( ! annotationView.superview)
     {
         [self.glView addSubview:annotationView];
         // Prevents the view from sliding in from the origin.
         annotationView.center = userPoint;
+        NSLog(@"instant update user");
     }
 
     if (CGRectContainsPoint(CGRectInset(self.bounds, -MGLAnnotationUpdateViewportOutset.width,
@@ -5164,6 +5231,7 @@ public:
                                                  userPoint.y - annotationView.center.y);
             }
             annotationView.center = userPoint;
+            NSLog(@"animated update user");
         } completion:NULL];
         _userLocationAnimationCompletionDate = [NSDate dateWithTimeIntervalSinceNow:duration];
 
