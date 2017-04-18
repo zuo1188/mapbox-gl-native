@@ -1,75 +1,30 @@
 #pragma once
 
-#include <mbgl/util/type_list.hpp>
-#include <mbgl/util/indexed_tuple.hpp>
-#include <mbgl/util/range.hpp>
-
+#include <mbgl/util/optional.hpp>
 
 namespace mbgl {
 namespace style {
 
-/**
- * A statistics entry for a property
- */
-template <class Type>
-class StatsEntry {
-public:
-    optional<Type> max;
-    bool set;
-};
-
-/**
- * Holder for paint property statistics,
- * calculated just before rendering
- *
- * <Ps> the DataDrivenPaintProperties in this collection
- */
-template <class... Ps>
+template <class T>
 class PaintPropertyStatistics {
 public:
+    optional<T> max() const { return {}; }
+    void add(const T&) {}
+};
 
-    using Properties = TypeList<Ps...>;
-    using Types = TypeList<StatsEntry<typename Ps::Type>...>;
-
-    template <class TypeList>
-    using Tuple = IndexedTuple<Properties, TypeList>;
-
-    class Values : public Tuple<Types> {
-    public:
-        using Tuple<Types>::Tuple;
-    };
-    
-    template <class P>
-    bool has() const {
-        return entries.template get<P>().set;
+template <>
+class PaintPropertyStatistics<float> {
+public:
+    optional<float> max() const {
+        return _max;
     }
 
-    template <class P>
-    auto max() const {
-        auto value = entries.template get<P>();
-        return *value.max;
-    }
-
-    template <class P>
-    void add(const float& value) {
-        auto& holder = entries.template get<P>();
-        holder.max = holder.max ? std::max(*holder.max, value) : value;
-        holder.set = true;
-    }
-
-    template <class P>
-    void add(const Range<float>& value) {
-        add<P>(std::max(value.min, value.max));
-    }
-
-    template <class P, class T>
-    void add(const T&) {
-        //NOOP, not interested in these types, yet.
+    void add(float value) {
+        _max = _max ? std::max(*_max, value) : value;
     }
 
 private:
-
-    Values entries;
+    optional<float> _max;
 };
 
 } // namespace style

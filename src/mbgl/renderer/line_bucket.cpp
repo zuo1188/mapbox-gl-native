@@ -463,10 +463,10 @@ bool LineBucket::hasData() const {
 template <class Property>
 static float get(const LineLayer& layer, const std::map<std::string, LineProgram::PaintPropertyBinders>& paintPropertyBinders) {
     auto it = paintPropertyBinders.find(layer.getID());
-    if (it == paintPropertyBinders.end() || !it->second.statistics.has<Property>()) {
+    if (it == paintPropertyBinders.end() || !it->second.statistics<Property>().max()) {
         return layer.impl->paint.evaluated.get<Property>().constantOr(Property::defaultValue());
     } else {
-        return it->second.statistics.max<Property>();
+        return *it->second.statistics<Property>().max();
     }
 }
 

@@ -4,7 +4,7 @@
 #include <mbgl/gl/attribute.hpp>
 #include <mbgl/gl/uniform.hpp>
 #include <mbgl/util/type_list.hpp>
-#include "paint_property_statistics.hpp"
+#include <mbgl/style/paint_property_statistics.hpp>
 
 namespace mbgl {
 namespace style {
@@ -77,7 +77,7 @@ std::array<float, N*2> zoomInterpolatedAttributeValue(const std::array<float, N>
    `glVertexAttrib*` was unnacceptably slow. Additionally, in GL Native we have
    implemented binary shader caching, which works better if the shaders are constant.
 */
-template <class P, class T, class A, class Statistics>
+template <class T, class A>
 class PaintPropertyBinder {
 public:
     using Attribute = ZoomInterpolatedAttributeType<A>;
@@ -85,16 +85,18 @@ public:
 
     virtual ~PaintPropertyBinder() = default;
 
-    virtual void populateVertexVector(const GeometryTileFeature& feature, std::size_t length, Statistics& statistics) = 0;
+    virtual void populateVertexVector(const GeometryTileFeature& feature, std::size_t length) = 0;
     virtual void upload(gl::Context& context) = 0;
     virtual AttributeBinding attributeBinding(const PossiblyEvaluatedPropertyValue<T>& currentValue) const = 0;
     virtual float interpolationFactor(float currentZoom) const = 0;
 
     static std::unique_ptr<PaintPropertyBinder> create(const PossiblyEvaluatedPropertyValue<T>& value, float zoom, T defaultValue);
+
+    PaintPropertyStatistics<T> statistics;
 };
 
-template <class P, class T, class A, class Statistics>
-class ConstantPaintPropertyBinder : public PaintPropertyBinder<P, T, A, Statistics> {
+template <class T, class A>
+class ConstantPaintPropertyBinder : public PaintPropertyBinder<T, A> {
 public:
     using Attribute = ZoomInterpolatedAttributeType<A>;
     using AttributeBinding = typename Attribute::Binding;
@@ -103,8 +105,7 @@ public:
         : constant(std::move(constant_)) {
     }
 
-    void populateVertexVector(const GeometryTileFeature&, std::size_t, Statistics&) override {}
-
+    void populateVertexVector(const GeometryTileFeature&, std::size_t) override {}
     void upload(gl::Context&) override {}
 
     AttributeBinding attributeBinding(const PossiblyEvaluatedPropertyValue<T>& currentValue) const override {
@@ -122,8 +123,8 @@ private:
     T constant;
 };
 
-template <class P, class T, class A, class Statistics>
-class SourceFunctionPaintPropertyBinder : public PaintPropertyBinder<P, T, A, Statistics> {
+template <class T, class A>
+class SourceFunctionPaintPropertyBinder : public PaintPropertyBinder<T, A> {
 public:
     using BaseAttribute = A;
     using BaseAttributeValue = typename BaseAttribute::Value;
@@ -137,10 +138,10 @@ public:
           defaultValue(std::move(defaultValue_)) {
     }
 
-    void populateVertexVector(const GeometryTileFeature& feature, std::size_t length, Statistics& statistics) override {
+    void populateVertexVector(const GeometryTileFeature& feature, std::size_t length) override {
         auto evaluated = function.evaluate(feature, defaultValue);
-        statistics.template add<P>(evaluated);
-        auto value = attributeValue(evaluated);
+        this->statistics.add(evaluated);
+        auto value = attributeValue(function.evaluate(feature, defaultValue));
         for (std::size_t i = vertexVector.vertexSize(); i < length; ++i) {
             vertexVector.emplace_back(BaseVertex { value });
         }
@@ -172,8 +173,8 @@ private:
     optional<gl::VertexBuffer<BaseVertex>> vertexBuffer;
 };
 
-template <class P, class T, class A, class Statistics>
-class CompositeFunctionPaintPropertyBinder : public PaintPropertyBinder<P, T, A, Statistics> {
+template <class T, class A>
+class CompositeFunctionPaintPropertyBinder : public PaintPropertyBinder<T, A> {
 public:
     using BaseAttribute = A;
     using BaseAttributeValue = typename BaseAttribute::Value;
@@ -189,9 +190,10 @@ public:
           coveringRanges(function.coveringRanges(zoom)) {
     }
 
-    void populateVertexVector(const GeometryTileFeature& feature, std::size_t length, Statistics& statistics) override {
+    void populateVertexVector(const GeometryTileFeature& feature, std::size_t length) override {
         Range<T> range = function.evaluate(std::get<1>(coveringRanges), feature, defaultValue);
-        statistics.template add<P>(range);
+        this->statistics.add(range.min);
+        this->statistics.add(range.max);
         AttributeValue value = zoomInterpolatedAttributeValue(
             attributeValue(range.min),
             attributeValue(range.max));
@@ -228,18 +230,18 @@ private:
     optional<gl::VertexBuffer<Vertex>> vertexBuffer;
 };
 
-template <class P, class T, class A, class Statistics>
-std::unique_ptr<PaintPropertyBinder<P, T, A, Statistics>>
-PaintPropertyBinder<P, T, A, Statistics>::create(const PossiblyEvaluatedPropertyValue<T>& value, float zoom, T defaultValue) {
+template <class T, class A>
+std::unique_ptr<PaintPropertyBinder<T, A>>
+PaintPropertyBinder<T, A>::create(const PossiblyEvaluatedPropertyValue<T>& value, float zoom, T defaultValue) {
     return value.match(
-        [&] (const T& constant) -> std::unique_ptr<PaintPropertyBinder<P, T, A, Statistics>> {
-            return std::make_unique<ConstantPaintPropertyBinder<P, T, A, Statistics>>(constant);
+        [&] (const T& constant) -> std::unique_ptr<PaintPropertyBinder<T, A>> {
+            return std::make_unique<ConstantPaintPropertyBinder<T, A>>(constant);
         },
         [&] (const SourceFunction<T>& function) {
-            return std::make_unique<SourceFunctionPaintPropertyBinder<P, T, A, Statistics>>(function, defaultValue);
+            return std::make_unique<SourceFunctionPaintPropertyBinder<T, A>>(function, defaultValue);
         },
         [&] (const CompositeFunction<T>& function) {
-            return std::make_unique<CompositeFunctionPaintPropertyBinder<P, T, A, Statistics>>(function, zoom, defaultValue);
+            return std::make_unique<CompositeFunctionPaintPropertyBinder<T, A>>(function, zoom, defaultValue);
         }
     );
 }
@@ -264,10 +266,8 @@ class PaintPropertyBinders;
 template <class... Ps>
 class PaintPropertyBinders<TypeList<Ps...>> {
 public:
-    using Statistics = PaintPropertyStatistics<Ps...>;
-
     template <class P>
-    using Binder = PaintPropertyBinder<P, typename P::Type, typename P::Attribute::Type, Statistics>;
+    using Binder = PaintPropertyBinder<typename P::Type, typename P::Attribute::Type>;
 
     using Binders = IndexedTuple<
         TypeList<Ps...>,
@@ -284,7 +284,7 @@ public:
 
     void populateVertexVectors(const GeometryTileFeature& feature, std::size_t length) {
         util::ignore({
-            (binders.template get<Ps>()->populateVertexVector(feature, length, statistics), 0)...
+            (binders.template get<Ps>()->populateVertexVector(feature, length), 0)...
         });
     }
 
@@ -319,7 +319,10 @@ public:
         };
     }
 
-    Statistics statistics;
+    template <class P>
+    const auto& statistics() const {
+        return binders.template get<P>()->statistics;
+    }
 
 private:
     Binders binders;
