@@ -19,6 +19,7 @@ Mapbox welcomes participation and contributions from everyone.  If you'd like to
 * Custom location source [#8710](https://github.com/mapbox/mapbox-gl-native/pull/8710)
 * Expose source layer identifier [#8709](https://github.com/mapbox/mapbox-gl-native/pull/8709).
 * Ensure surface is created after display and context [#8759](https://github.com/mapbox/mapbox-gl-native/pull/8759)
+* Update attribution with new Mapbox wordmark [#8774](https://github.com/mapbox/mapbox-gl-native/pull/8774)
 
 ## 5.0.2 - April 3, 2017
 
