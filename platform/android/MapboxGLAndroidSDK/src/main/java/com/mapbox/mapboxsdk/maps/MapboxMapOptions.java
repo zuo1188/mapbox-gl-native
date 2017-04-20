@@ -38,7 +38,7 @@ public class MapboxMapOptions implements Parcelable {
   private static final float DIMENSION_SEVEN_DP = 7f;
   private static final float DIMENSION_TEN_DP = 10f;
   private static final float DIMENSION_SIXTEEN_DP = 16f;
-  private static final float DIMENSION_SEVENTY_SIX_DP = 76f;
+  private static final float DIMENSION_NINE_HUNDRED_EIGHTY_DP = 980f;
 
   private CameraPosition cameraPosition;
 
@@ -243,7 +243,7 @@ public class MapboxMapOptions implements Parcelable {
         R.styleable.mapbox_MapView_mapbox_uiAttributionGravity, Gravity.BOTTOM));
       mapboxMapOptions.attributionMargins(new int[] {
         (int) (typedArray.getDimension(R.styleable.mapbox_MapView_mapbox_uiAttributionMarginLeft,
-          DIMENSION_SEVENTY_SIX_DP) * pxlRatio),
+          DIMENSION_NINE_HUNDRED_EIGHTY_DP) * pxlRatio),
         (int) (typedArray.getDimension(R.styleable.mapbox_MapView_mapbox_uiAttributionMarginTop,
           DIMENSION_SEVEN_DP * pxlRatio)),
         (int) (typedArray.getDimension(R.styleable.mapbox_MapView_mapbox_uiAttributionMarginRight,
