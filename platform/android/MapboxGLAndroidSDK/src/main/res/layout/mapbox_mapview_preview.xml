@@ -26,6 +26,7 @@
         android:layout_alignParentBottom="true"
         android:layout_marginBottom="@dimen/mapbox_eight_dp"
         android:layout_marginLeft="@dimen/mapbox_ninety_five_dp"
+        android:layout_marginStart="@dimen/mapbox_ninety_five_dp"
         android:background="@drawable/mapbox_default_bg_selector"
         android:clickable="true"
         android:contentDescription="@string/mapbox_attributionsIconContentDescription"
