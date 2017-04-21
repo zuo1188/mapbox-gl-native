@@ -4,6 +4,7 @@
 #include <mbgl/annotation/symbol_annotation_impl.hpp>
 #include <mbgl/sprite/sprite_atlas.hpp>
 #include <mbgl/map/update.hpp>
+#include <mbgl/style/style.hpp>
 #include <mbgl/util/noncopyable.hpp>
 
 #include <string>
@@ -17,11 +18,6 @@ class AnnotationTile;
 class AnnotationTileData;
 class SymbolAnnotationImpl;
 class ShapeAnnotationImpl;
-
-namespace style {
-class Style;
-class Image;
-} // namespace style
 
 class AnnotationManager : private util::noncopyable {
 public:
@@ -37,7 +33,7 @@ public:
     double getTopOffsetPixelsForImage(const std::string&);
     SpriteAtlas& getSpriteAtlas() { return spriteAtlas; }
 
-    void updateStyle(style::Style&);
+    void updateStyle(style::Style::Impl&);
     void updateData();
 
     void addTile(AnnotationTile&);

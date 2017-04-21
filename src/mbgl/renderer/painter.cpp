@@ -10,7 +10,7 @@
 #include <mbgl/util/logging.hpp>
 #include <mbgl/gl/debugging.hpp>
 
-#include <mbgl/style/style.hpp>
+#include <mbgl/style/style_impl.hpp>
 #include <mbgl/style/layer_impl.hpp>
 
 #include <mbgl/style/layers/background_layer.hpp>
@@ -112,7 +112,7 @@ void Painter::cleanup() {
     context.performCleanup();
 }
 
-void Painter::render(const Style& style, const FrameData& frame_, View& view, SpriteAtlas& annotationSpriteAtlas) {
+void Painter::render(const Style::Impl& style, const FrameData& frame_, View& view, SpriteAtlas& annotationSpriteAtlas) {
     frame = frame_;
     if (frame.contextMode == GLContextMode::Shared) {
         context.setDirtyState();

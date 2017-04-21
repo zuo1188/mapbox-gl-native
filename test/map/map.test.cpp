@@ -17,6 +17,7 @@
 #include <mbgl/util/run_loop.hpp>
 #include <mbgl/util/async_task.hpp>
 #include <mbgl/style/image.hpp>
+#include <mbgl/style/style.hpp>
 #include <mbgl/style/layers/background_layer.hpp>
 #include <mbgl/util/color.hpp>
 
@@ -225,12 +226,12 @@ TEST(Map, StyleExpired) {
     fileSource.respond(Resource::Style, response);
     EXPECT_EQ(1u, fileSource.requests.size());
 
-    map.addLayer(std::make_unique<style::BackgroundLayer>("bg"));
+    map.getStyle()->addLayer(std::make_unique<style::BackgroundLayer>("bg"));
     EXPECT_EQ(1u, fileSource.requests.size());
 
     fileSource.respond(Resource::Style, response);
     EXPECT_EQ(0u, fileSource.requests.size());
-    EXPECT_NE(nullptr, map.getLayer("bg"));
+    EXPECT_NE(nullptr, map.getStyle()->getLayer("bg"));
 }
 
 TEST(Map, StyleExpiredWithAnnotations) {
@@ -267,14 +268,14 @@ TEST(Map, StyleEarlyMutation) {
 
     Map map(test.backend, test.view.getSize(), 1, fileSource, test.threadPool, MapMode::Still);
     map.setStyleURL("mapbox://styles/test");
-    map.addLayer(std::make_unique<style::BackgroundLayer>("bg"));
+    map.getStyle()->addLayer(std::make_unique<style::BackgroundLayer>("bg"));
 
     Response response;
     response.data = std::make_shared<std::string>(util::read_file("test/fixtures/api/water.json"));
     fileSource.respond(Resource::Style, response);
 
     EXPECT_EQ(0u, fileSource.requests.size());
-    EXPECT_NE(nullptr, map.getLayer("water"));
+    EXPECT_NE(nullptr, map.getStyle()->getLayer("water"));
 }
 
 TEST(Map, StyleLoadedSignal) {
@@ -346,7 +347,7 @@ TEST(Map, AddLayer) {
 
     auto layer = std::make_unique<BackgroundLayer>("background");
     layer->setBackgroundColor({ { 1, 0, 0, 1 } });
-    map.addLayer(std::move(layer));
+    map.getStyle()->addLayer(std::move(layer));
 
     test::checkImage("test/fixtures/map/add_layer", test::render(map, test.view));
 }
@@ -372,8 +373,8 @@ TEST(Map, RemoveLayer) {
 
     auto layer = std::make_unique<BackgroundLayer>("background");
     layer->setBackgroundColor({{ 1, 0, 0, 1 }});
-    map.addLayer(std::move(layer));
-    map.removeLayer("background");
+    map.getStyle()->addLayer(std::move(layer));
+    map.getStyle()->removeLayer("background");
 
     test::checkImage("test/fixtures/map/remove_layer", test::render(map, test.view));
 }
@@ -445,32 +446,36 @@ TEST(Map, Classes) {
     Map map(test.backend, test.view.getSize(), 1, test.fileSource, test.threadPool, MapMode::Still);
     map.setStyleJSON(util::read_file("test/fixtures/api/empty.json"));
 
-    EXPECT_FALSE(map.getTransitionOptions().duration);
+    Style* style = map.getStyle();
+
+    EXPECT_FALSE(style->getTransitionOptions().duration);
 
     auto duration = mbgl::Duration(mbgl::Milliseconds(300));
-    map.setTransitionOptions({ duration });
-    EXPECT_EQ(map.getTransitionOptions().duration, duration);
+    style->setTransitionOptions({ duration });
+    EXPECT_EQ(style->getTransitionOptions().duration, duration);
 
-    map.addClass("test");
-    EXPECT_TRUE(map.hasClass("test"));
+    style->addClass("test");
+    EXPECT_TRUE(style->hasClass("test"));
 
-    map.removeClass("test");
-    EXPECT_TRUE(map.getClasses().empty());
+    style->removeClass("test");
+    EXPECT_TRUE(style->getClasses().empty());
 
     std::vector<std::string> classes = { "foo", "bar" };
-    map.setClasses(classes);
-    EXPECT_FALSE(map.hasClass("test"));
-    EXPECT_TRUE(map.hasClass("foo"));
-    EXPECT_TRUE(map.hasClass("bar"));
+    style->setClasses(classes);
+    EXPECT_FALSE(style->hasClass("test"));
+    EXPECT_TRUE(style->hasClass("foo"));
+    EXPECT_TRUE(style->hasClass("bar"));
 
     // Does nothing - same style JSON.
     map.setStyleJSON(util::read_file("test/fixtures/api/empty.json"));
-    EXPECT_TRUE(map.hasClass("foo"));
-    EXPECT_EQ(map.getTransitionOptions().duration, duration);
+    style = map.getStyle();
+    EXPECT_TRUE(style->hasClass("foo"));
+    EXPECT_EQ(style->getTransitionOptions().duration, duration);
 
     map.setStyleJSON(util::read_file("test/fixtures/api/water.json"));
-    EXPECT_TRUE(map.getClasses().empty());
-    EXPECT_FALSE(map.getTransitionOptions().duration);
+    style = map.getStyle();
+    EXPECT_TRUE(style->getClasses().empty());
+    EXPECT_FALSE(style->getTransitionOptions().duration);
 }
 
 TEST(Map, AddImage) {
@@ -482,11 +487,8 @@ TEST(Map, AddImage) {
     auto image1 = std::make_unique<style::Image>(std::move(decoded1), 1.0);
     auto image2 = std::make_unique<style::Image>(std::move(decoded2), 1.0);
 
-    // No-op.
-    map.addImage("test-icon", std::move(image1));
-
     map.setStyleJSON(util::read_file("test/fixtures/api/icon_style.json"));
-    map.addImage("test-icon", std::move(image2));
+    map.getStyle()->addImage("test-icon", std::move(image2));
     test::checkImage("test/fixtures/map/add_icon", test::render(map, test.view));
 }
 
@@ -498,8 +500,8 @@ TEST(Map, RemoveImage) {
     auto image = std::make_unique<style::Image>(std::move(decoded), 1.0);
 
     map.setStyleJSON(util::read_file("test/fixtures/api/icon_style.json"));
-    map.addImage("test-icon", std::move(image));
-    map.removeImage("test-icon");
+    map.getStyle()->addImage("test-icon", std::move(image));
+    map.getStyle()->removeImage("test-icon");
     test::checkImage("test/fixtures/map/remove_icon", test::render(map, test.view));
 }
 
@@ -511,8 +513,8 @@ TEST(Map, GetImage) {
     auto image = std::make_unique<style::Image>(std::move(decoded), 1.0);
 
     map.setStyleJSON(util::read_file("test/fixtures/api/icon_style.json"));
-    map.addImage("test-icon", std::move(image));
-    test::checkImage("test/fixtures/map/get_icon", map.getImage("test-icon")->image);
+    map.getStyle()->addImage("test-icon", std::move(image));
+    test::checkImage("test/fixtures/map/get_icon", map.getStyle()->getImage("test-icon")->image);
 }
 
 TEST(Map, DontLoadUnneededTiles) {

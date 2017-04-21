@@ -1,5 +1,6 @@
 #pragma once
 
+#include <mbgl/style/style.hpp>
 #include <mbgl/style/transition_options.hpp>
 #include <mbgl/style/observer.hpp>
 #include <mbgl/style/source_observer.hpp>
@@ -34,18 +35,64 @@ class Scheduler;
 
 namespace style {
 
+class Image;
+class Source;
 class Layer;
 class UpdateParameters;
 class QueryParameters;
 
-class Style : public GlyphAtlasObserver,
-              public SpriteAtlasObserver,
-              public SourceObserver,
-              public LayerObserver,
-              public util::noncopyable {
+class Style::Impl : public GlyphAtlasObserver,
+                    public SpriteAtlasObserver,
+                    public SourceObserver,
+                    public LayerObserver,
+                    public util::noncopyable {
 public:
-    Style(Scheduler&, FileSource&, float pixelRatio);
-    ~Style() override;
+    Impl(Scheduler&, FileSource&, float pixelRatio);
+    ~Impl() override;
+
+    // Defaults
+    std::string getName() const;
+    LatLng getDefaultLatLng() const;
+    double getDefaultZoom() const;
+    double getDefaultBearing() const;
+    double getDefaultPitch() const;
+
+    // TransitionOptions
+    TransitionOptions getTransitionOptions() const;
+    void setTransitionOptions(const TransitionOptions&);
+
+    // Images
+    const Image* getImage(const std::string&) const;
+    void addImage(const std::string&, std::unique_ptr<Image>);
+    void removeImage(const std::string&);
+
+    // Sources
+    std::vector<      Source*> getSources();
+    std::vector<const Source*> getSources() const;
+
+          Source* getSource(const std::string&);
+    const Source* getSource(const std::string&) const;
+
+    void addSource(std::unique_ptr<Source>);
+    std::unique_ptr<Source> removeSource(const std::string& sourceID);
+
+    // Layers
+    std::vector<      Layer*> getLayers();
+    std::vector<const Layer*> getLayers() const;
+
+          Layer* getLayer(const std::string&);
+    const Layer* getLayer(const std::string&) const;
+
+    Layer* addLayer(std::unique_ptr<Layer>,
+                    optional<std::string> beforeLayerID = {});
+    std::unique_ptr<Layer> removeLayer(const std::string& layerID);
+
+    // Classes
+    bool addClass(const std::string&);
+    bool removeClass(const std::string&);
+    void setClasses(const std::vector<std::string>&);
+    bool hasClass(const std::string&) const;
+    std::vector<std::string> getClasses() const;
 
     void setJSON(const std::string&);
 
@@ -66,35 +113,6 @@ public:
     std::exception_ptr getLastError() const {
         return lastError;
     }
-
-    std::vector<const Source*> getSources() const;
-    std::vector<Source*> getSources();
-    Source* getSource(const std::string& id) const;
-    void addSource(std::unique_ptr<Source>);
-    std::unique_ptr<Source> removeSource(const std::string& sourceID);
-
-    std::vector<const Layer*> getLayers() const;
-    std::vector<Layer*> getLayers();
-    Layer* getLayer(const std::string& id) const;
-    Layer* addLayer(std::unique_ptr<Layer>,
-                    optional<std::string> beforeLayerID = {});
-    std::unique_ptr<Layer> removeLayer(const std::string& layerID);
-
-    std::string getName() const;
-    LatLng getDefaultLatLng() const;
-    double getDefaultZoom() const;
-    double getDefaultBearing() const;
-    double getDefaultPitch() const;
-
-    bool addClass(const std::string&);
-    bool removeClass(const std::string&);
-    void setClasses(const std::vector<std::string>&);
-
-    TransitionOptions getTransitionOptions() const;
-    void setTransitionOptions(const TransitionOptions&);
-
-    bool hasClass(const std::string&) const;
-    std::vector<std::string> getClasses() const;
 
     RenderData getRenderData(MapDebugOptions, float angle) const;
 
@@ -152,9 +170,6 @@ private:
     void onLayerDataDrivenPaintPropertyChanged(Layer&) override;
     void onLayerLayoutPropertyChanged(Layer&, const char *) override;
 
-    Observer nullObserver;
-    Observer* observer = &nullObserver;
-
     std::exception_ptr lastError;
 
     UpdateBatch updateBatch;
@@ -162,7 +177,11 @@ private:
     bool hasPendingTransitions = false;
 
 public:
+    Observer nullObserver;
+    Observer* observer = &nullObserver;
+
     bool loaded = false;
+    bool mutated = false;
 };
 
 } // namespace style

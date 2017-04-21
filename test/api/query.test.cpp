@@ -9,6 +9,7 @@
 #include <mbgl/util/io.hpp>
 #include <mbgl/util/run_loop.hpp>
 #include <mbgl/style/image.hpp>
+#include <mbgl/style/style.hpp>
 #include <mbgl/style/source.hpp>
 
 using namespace mbgl;
@@ -20,7 +21,9 @@ class QueryTest {
 public:
     QueryTest() {
         map.setStyleJSON(util::read_file("test/fixtures/api/query_style.json"));
-        map.addImage("test-icon", std::make_unique<style::Image>(
+
+        style = map.getStyle();
+        style->addImage("test-icon", std::make_unique<style::Image>(
             decodeImage(util::read_file("test/fixtures/sprites/default_marker.png")), 1.0));
 
         test::render(map, view);
@@ -33,6 +36,7 @@ public:
     StubFileSource fileSource;
     ThreadPool threadPool { 4 };
     Map map { backend, view.getSize(), 1, fileSource, threadPool, MapMode::Still };
+    Style* style;
 };
 
 } // end namespace
@@ -86,7 +90,7 @@ TEST(Query, QueryRenderedFeaturesFilter) {
 TEST(Query, QuerySourceFeatures) {
     QueryTest test;
 
-    auto features1 = test.map.getSource("source3")->querySourceFeatures();
+    auto features1 = test.style->getSource("source3")->querySourceFeatures();
     EXPECT_EQ(features1.size(), 1u);
 }
 
@@ -94,15 +98,15 @@ TEST(Query, QuerySourceFeaturesOptionValidation) {
     QueryTest test;
 
     // GeoJSONSource, doesn't require a layer id
-    auto features = test.map.getSource("source3")->querySourceFeatures();
+    auto features = test.style->getSource("source3")->querySourceFeatures();
     ASSERT_EQ(features.size(), 1u);
 
     // VectorSource, requires a layer id
-    features = test.map.getSource("source5")->querySourceFeatures();
+    features = test.style->getSource("source5")->querySourceFeatures();
     ASSERT_EQ(features.size(), 0u);
     
     // RasterSource, not supported
-    features = test.map.getSource("source6")->querySourceFeatures();
+    features = test.style->getSource("source6")->querySourceFeatures();
     ASSERT_EQ(features.size(), 0u);
 }
 
@@ -110,15 +114,15 @@ TEST(Query, QuerySourceFeaturesFilter) {
     QueryTest test;
 
     const EqualsFilter eqFilter = { "key1", std::string("value1") };
-    auto features1 = test.map.getSource("source4")->querySourceFeatures({{}, { eqFilter }});
+    auto features1 = test.style->getSource("source4")->querySourceFeatures({{}, { eqFilter }});
     EXPECT_EQ(features1.size(), 1u);
 
     const IdentifierNotEqualsFilter idNotEqFilter = { std::string("feature1") };
-    auto features2 = test.map.getSource("source4")->querySourceFeatures({{}, { idNotEqFilter }});
+    auto features2 = test.style->getSource("source4")->querySourceFeatures({{}, { idNotEqFilter }});
     EXPECT_EQ(features2.size(), 0u);
 
     const GreaterThanFilter gtFilter = { "key2", 1.0 };
-    auto features3 = test.map.getSource("source4")->querySourceFeatures({{}, { gtFilter }});
+    auto features3 = test.style->getSource("source4")->querySourceFeatures({{}, { gtFilter }});
     EXPECT_EQ(features3.size(), 1u);
 }
 

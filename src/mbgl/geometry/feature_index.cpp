@@ -70,7 +70,7 @@ static int16_t getAdditionalQueryRadius(const RenderedQueryOptions& queryOptions
 
     if (queryOptions.layerIDs) {
         for (const auto& layerID : *queryOptions.layerIDs) {
-            style::Layer* layer = style.getLayer(layerID);
+            const style::Layer* layer = style.getLayer(layerID);
             if (layer) {
                 getQueryRadius(*layer);
             }

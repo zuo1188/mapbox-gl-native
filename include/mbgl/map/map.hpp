@@ -9,7 +9,6 @@
 #include <mbgl/util/noncopyable.hpp>
 #include <mbgl/util/size.hpp>
 #include <mbgl/annotation/annotation.hpp>
-#include <mbgl/style/transition_options.hpp>
 #include <mbgl/map/camera.hpp>
 #include <mbgl/map/query.hpp>
 
@@ -28,8 +27,7 @@ class Scheduler;
 
 namespace style {
 class Image;
-class Source;
-class Layer;
+class Style;
 } // namespace style
 
 class Map : private util::noncopyable {
@@ -57,21 +55,14 @@ public:
     // Main render function.
     void render(View&);
 
-    // Styling
-    void addClass(const std::string&);
-    void removeClass(const std::string&);
-    void setClasses(const std::vector<std::string>&);
-
-    style::TransitionOptions getTransitionOptions() const;
-    void setTransitionOptions(const style::TransitionOptions&);
-
-    bool hasClass(const std::string&) const;
-    std::vector<std::string> getClasses() const;
-
+    // Style
     void setStyleURL(const std::string&);
     void setStyleJSON(const std::string&);
     std::string getStyleURL() const;
     std::string getStyleJSON() const;
+
+          style::Style* getStyle();
+    const style::Style* getStyle() const;
 
     // Transition
     void cancelTransitions();
@@ -161,30 +152,6 @@ public:
     AnnotationID addAnnotation(const Annotation&);
     void updateAnnotation(AnnotationID, const Annotation&);
     void removeAnnotation(AnnotationID);
-
-    // Sources
-    std::vector<style::Source*> getSources();
-    style::Source* getSource(const std::string& sourceID);
-    void addSource(std::unique_ptr<style::Source>);
-    std::unique_ptr<style::Source> removeSource(const std::string& sourceID);
-
-    // Layers
-    std::vector<style::Layer*> getLayers();
-    style::Layer* getLayer(const std::string& layerID);
-    void addLayer(std::unique_ptr<style::Layer>, const optional<std::string>& beforeLayerID = {});
-    std::unique_ptr<style::Layer> removeLayer(const std::string& layerID);
-
-    // Images
-    void addImage(const std::string&, std::unique_ptr<style::Image>);
-    void removeImage(const std::string&);
-    const style::Image* getImage(const std::string&);
-
-    // Defaults
-    std::string getStyleName() const;
-    LatLng getDefaultLatLng() const;
-    double getDefaultZoom() const;
-    double getDefaultBearing() const;
-    double getDefaultPitch() const;
 
     // Feature queries
     std::vector<Feature> queryRenderedFeatures(const ScreenCoordinate&, const RenderedQueryOptions& options = {});

@@ -7,7 +7,7 @@
 #include <mbgl/style/layers/background_layer.hpp>
 #include <mbgl/style/layers/custom_layer.hpp>
 #include <mbgl/style/layers/symbol_layer.hpp>
-#include <mbgl/style/style.hpp>
+#include <mbgl/style/style_impl.hpp>
 #include <mbgl/storage/file_source.hpp>
 #include <mbgl/geometry/feature_index.hpp>
 #include <mbgl/text/collision_tile.hpp>
@@ -36,7 +36,7 @@ GeometryTile::GeometryTile(const OverscaledTileID& id_,
              id_,
              obsolete,
              parameters.mode),
-             glyphAtlas(*parameters.style.glyphAtlas) {
+             glyphAtlas(*parameters.style.impl->glyphAtlas) {
 }
 
 GeometryTile::~GeometryTile() {

@@ -48,7 +48,6 @@ class PaintParameters;
 struct ClipID;
 
 namespace style {
-class Style;
 class Source;
 class FillLayer;
 class LineLayer;
@@ -71,7 +70,7 @@ public:
     Painter(gl::Context&, const TransformState&, float pixelRatio, const std::string& programCacheDir);
     ~Painter();
 
-    void render(const style::Style&,
+    void render(const style::Style::Impl&,
                 const FrameData&,
                 View&,
                 SpriteAtlas& annotationSpriteAtlas);

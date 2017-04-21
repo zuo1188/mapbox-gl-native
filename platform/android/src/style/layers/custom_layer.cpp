@@ -17,8 +17,8 @@ namespace android {
                 ) {
     }
 
-    CustomLayer::CustomLayer(mbgl::Map& map, mbgl::style::CustomLayer& coreLayer)
-        : Layer(map, coreLayer) {
+    CustomLayer::CustomLayer(mbgl::style::Style& style, mbgl::style::CustomLayer& coreLayer)
+        : Layer(style, coreLayer) {
     }
 
     CustomLayer::~CustomLayer() = default;

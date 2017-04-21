@@ -1,6 +1,6 @@
 #include <mbgl/annotation/style_sourced_annotation_impl.hpp>
 #include <mbgl/annotation/annotation_manager.hpp>
-#include <mbgl/style/style.hpp>
+#include <mbgl/style/style_impl.hpp>
 #include <mbgl/style/layer.hpp>
 #include <mbgl/style/layer_impl.hpp>
 #include <mbgl/style/layers/line_layer.hpp>
@@ -15,7 +15,7 @@ StyleSourcedAnnotationImpl::StyleSourcedAnnotationImpl(AnnotationID id_, StyleSo
       annotation(std::move(annotation_)) {
 }
 
-void StyleSourcedAnnotationImpl::updateStyle(Style& style) const {
+void StyleSourcedAnnotationImpl::updateStyle(Style::Impl& style) const {
     if (style.getLayer(layerID))
         return;
 
