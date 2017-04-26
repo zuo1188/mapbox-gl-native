@@ -95,8 +95,8 @@ TEST(Source, LoadingFail) {
     };
 
     VectorSource source("source", "url");
-    source.baseImpl->setObserver(&test.styleObserver);
-    source.baseImpl->loadDescription(test.fileSource);
+    source.setObserver(&test.styleObserver);
+    source.loadDescription(test.fileSource);
 
     test.run();
 }
@@ -118,8 +118,8 @@ TEST(Source, LoadingCorrupt) {
     };
 
     VectorSource source("source", "url");
-    source.baseImpl->setObserver(&test.styleObserver);
-    source.baseImpl->loadDescription(test.fileSource);
+    source.setObserver(&test.styleObserver);
+    source.loadDescription(test.fileSource);
 
     test.run();
 }
@@ -137,7 +137,7 @@ TEST(Source, RasterTileEmpty) {
     tileset.tiles = { "tiles" };
 
     RasterSource source("source", tileset, 512);
-    source.baseImpl->loadDescription(test.fileSource);
+    source.loadDescription(test.fileSource);
 
     test.renderSourceObserver.tileChanged = [&] (RenderSource& source_, const OverscaledTileID&) {
         EXPECT_EQ("source", source_.baseImpl.id);
@@ -148,9 +148,9 @@ TEST(Source, RasterTileEmpty) {
         FAIL() << "Should never be called";
     };
 
-    RenderRasterSource renderSource(*source.impl);
-    renderSource.setObserver(&test.renderSourceObserver);
-    renderSource.updateTiles(test.tileParameters);
+    auto renderSource = source.baseImpl->createRenderSource();
+    renderSource->setObserver(&test.renderSourceObserver);
+    renderSource->updateTiles(test.tileParameters);
 
     test.run();
 }
@@ -168,7 +168,7 @@ TEST(Source, VectorTileEmpty) {
     tileset.tiles = { "tiles" };
 
     VectorSource source("source", tileset);
-    source.baseImpl->loadDescription(test.fileSource);
+    source.loadDescription(test.fileSource);
 
     test.renderSourceObserver.tileChanged = [&] (RenderSource& source_, const OverscaledTileID&) {
         EXPECT_EQ("source", source_.baseImpl.id);
@@ -179,9 +179,9 @@ TEST(Source, VectorTileEmpty) {
         FAIL() << "Should never be called";
     };
 
-    RenderVectorSource renderSource(*source.impl);
-    renderSource.setObserver(&test.renderSourceObserver);
-    renderSource.updateTiles(test.tileParameters);
+    auto renderSource = source.baseImpl->createRenderSource();
+    renderSource->setObserver(&test.renderSourceObserver);
+    renderSource->updateTiles(test.tileParameters);
 
     test.run();
 }
@@ -201,7 +201,7 @@ TEST(Source, RasterTileFail) {
     tileset.tiles = { "tiles" };
 
     RasterSource source("source", tileset, 512);
-    source.baseImpl->loadDescription(test.fileSource);
+    source.loadDescription(test.fileSource);
 
     test.renderSourceObserver.tileError = [&] (RenderSource& source_, const OverscaledTileID& tileID, std::exception_ptr error) {
         EXPECT_EQ(SourceType::Raster, source_.baseImpl.type);
@@ -210,9 +210,9 @@ TEST(Source, RasterTileFail) {
         test.end();
     };
 
-    RenderRasterSource renderSource(*source.impl);
-    renderSource.setObserver(&test.renderSourceObserver);
-    renderSource.updateTiles(test.tileParameters);
+    auto renderSource = source.baseImpl->createRenderSource();
+    renderSource->setObserver(&test.renderSourceObserver);
+    renderSource->updateTiles(test.tileParameters);
 
     test.run();
 }
@@ -232,7 +232,7 @@ TEST(Source, VectorTileFail) {
     tileset.tiles = { "tiles" };
 
     VectorSource source("source", tileset);
-    source.baseImpl->loadDescription(test.fileSource);
+    source.loadDescription(test.fileSource);
 
     test.renderSourceObserver.tileError = [&] (RenderSource& source_, const OverscaledTileID& tileID, std::exception_ptr error) {
         EXPECT_EQ(SourceType::Vector, source_.baseImpl.type);
@@ -241,9 +241,9 @@ TEST(Source, VectorTileFail) {
         test.end();
     };
 
-    RenderVectorSource renderSource(*source.impl);
-    renderSource.setObserver(&test.renderSourceObserver);
-    renderSource.updateTiles(test.tileParameters);
+    auto renderSource = source.baseImpl->createRenderSource();
+    renderSource->setObserver(&test.renderSourceObserver);
+    renderSource->updateTiles(test.tileParameters);
 
     test.run();
 }
@@ -261,7 +261,7 @@ TEST(Source, RasterTileCorrupt) {
     tileset.tiles = { "tiles" };
 
     RasterSource source("source", tileset, 512);
-    source.baseImpl->loadDescription(test.fileSource);
+    source.loadDescription(test.fileSource);
 
     test.renderSourceObserver.tileError = [&] (RenderSource& source_, const OverscaledTileID& tileID, std::exception_ptr error) {
         EXPECT_EQ(source_.baseImpl.type, SourceType::Raster);
@@ -271,9 +271,9 @@ TEST(Source, RasterTileCorrupt) {
         test.end();
     };
 
-    RenderRasterSource renderSource(*source.impl);
-    renderSource.setObserver(&test.renderSourceObserver);
-    renderSource.updateTiles(test.tileParameters);
+    auto renderSource = source.baseImpl->createRenderSource();
+    renderSource->setObserver(&test.renderSourceObserver);
+    renderSource->updateTiles(test.tileParameters);
 
     test.run();
 }
@@ -296,7 +296,7 @@ TEST(Source, VectorTileCorrupt) {
     tileset.tiles = { "tiles" };
 
     VectorSource source("source", tileset);
-    source.baseImpl->loadDescription(test.fileSource);
+    source.loadDescription(test.fileSource);
 
     test.renderSourceObserver.tileError = [&] (RenderSource& source_, const OverscaledTileID& tileID, std::exception_ptr error) {
         EXPECT_EQ(source_.baseImpl.type, SourceType::Vector);
@@ -305,9 +305,9 @@ TEST(Source, VectorTileCorrupt) {
         test.end();
     };
 
-    RenderVectorSource renderSource(*source.impl);
-    renderSource.setObserver(&test.renderSourceObserver);
-    renderSource.updateTiles(test.tileParameters);
+    auto renderSource = source.baseImpl->createRenderSource();
+    renderSource->setObserver(&test.renderSourceObserver);
+    renderSource->updateTiles(test.tileParameters);
 
     test.run();
 }
@@ -324,7 +324,7 @@ TEST(Source, RasterTileCancel) {
     tileset.tiles = { "tiles" };
 
     RasterSource source("source", tileset, 512);
-    source.baseImpl->loadDescription(test.fileSource);
+    source.loadDescription(test.fileSource);
 
     test.renderSourceObserver.tileChanged = [&] (RenderSource&, const OverscaledTileID&) {
         FAIL() << "Should never be called";
@@ -334,9 +334,9 @@ TEST(Source, RasterTileCancel) {
         FAIL() << "Should never be called";
     };
 
-    RenderRasterSource renderSource(*source.impl);
-    renderSource.setObserver(&test.renderSourceObserver);
-    renderSource.updateTiles(test.tileParameters);
+    auto renderSource = source.baseImpl->createRenderSource();
+    renderSource->setObserver(&test.renderSourceObserver);
+    renderSource->updateTiles(test.tileParameters);
 
     test.run();
 }
@@ -353,7 +353,7 @@ TEST(Source, VectorTileCancel) {
     tileset.tiles = { "tiles" };
 
     VectorSource source("source", tileset);
-    source.baseImpl->loadDescription(test.fileSource);
+    source.loadDescription(test.fileSource);
 
     test.renderSourceObserver.tileChanged = [&] (RenderSource&, const OverscaledTileID&) {
         FAIL() << "Should never be called";
@@ -363,9 +363,9 @@ TEST(Source, VectorTileCancel) {
         FAIL() << "Should never be called";
     };
 
-    RenderVectorSource renderSource(*source.impl);
-    renderSource.setObserver(&test.renderSourceObserver);
-    renderSource.updateTiles(test.tileParameters);
+    auto renderSource = source.baseImpl->createRenderSource();
+    renderSource->setObserver(&test.renderSourceObserver);
+    renderSource->updateTiles(test.tileParameters);
 
     test.run();
 }
@@ -398,11 +398,11 @@ TEST(Source, RasterTileAttribution) {
     };
 
     RasterSource source("source", "url", 512);
-    source.baseImpl->setObserver(&test.styleObserver);
-    source.baseImpl->loadDescription(test.fileSource);
+    source.setObserver(&test.styleObserver);
+    source.loadDescription(test.fileSource);
 
-    RenderRasterSource renderSource(*source.impl);
-    renderSource.updateTiles(test.tileParameters);
+    auto renderSource = source.baseImpl->createRenderSource();
+    renderSource->updateTiles(test.tileParameters);
 
     test.run();
 }
@@ -423,10 +423,10 @@ TEST(Source, GeoJSonSourceUrlUpdate) {
     };
 
     GeoJSONSource source("source");
-    source.baseImpl->setObserver(&test.styleObserver);
+    source.setObserver(&test.styleObserver);
 
     // Load initial, so the source state will be loaded=true
-    source.baseImpl->loadDescription(test.fileSource);
+    source.loadDescription(test.fileSource);
 
     // Schedule an update
     test.loop.invoke([&] () {

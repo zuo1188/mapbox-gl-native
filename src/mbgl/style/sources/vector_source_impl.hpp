@@ -1,16 +1,22 @@
 #pragma once
 
 #include <mbgl/style/sources/vector_source.hpp>
-#include <mbgl/style/tile_source_impl.hpp>
+#include <mbgl/style/source_impl.hpp>
 
 namespace mbgl {
 namespace style {
 
-class VectorSource::Impl : public TileSourceImpl {
+class VectorSource::Impl : public Source::Impl {
 public:
-    Impl(std::string id, Source&, variant<std::string, Tileset>);
+    Impl(std::string id);
+    Impl(const Impl&, Tileset);
+
+    optional<Tileset> getTileset() const;
 
     std::unique_ptr<RenderSource> createRenderSource() const final;
+
+private:
+    optional<Tileset> tileset;
 };
 
 } // namespace style
