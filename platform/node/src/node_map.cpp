@@ -9,7 +9,7 @@
 #include <mbgl/style/conversion/source.hpp>
 #include <mbgl/style/conversion/layer.hpp>
 #include <mbgl/style/conversion/filter.hpp>
-#include <mbgl/sprite/sprite_image.hpp>
+#include <mbgl/style/image.hpp>
 #include <mbgl/map/backend_scope.hpp>
 #include <mbgl/map/query.hpp>
 
@@ -57,6 +57,7 @@ void NodeMap::Init(v8::Local<v8::Object> target) {
     Nan::SetPrototypeMethod(tpl, "loaded", Loaded);
     Nan::SetPrototypeMethod(tpl, "render", Render);
     Nan::SetPrototypeMethod(tpl, "release", Release);
+    Nan::SetPrototypeMethod(tpl, "cancel", Cancel);
 
     Nan::SetPrototypeMethod(tpl, "addClass", AddClass);
     Nan::SetPrototypeMethod(tpl, "addSource", AddSource);
@@ -508,6 +509,42 @@ void NodeMap::release() {
     map.reset();
 }
 
+/**
+ * Cancel an ongoing render request. The callback will be called with
+ * the error set to "Canceled". Will throw if no rendering is in progress.
+ * @name cancel
+ * @returns {undefined}
+ */
+void NodeMap::Cancel(const Nan::FunctionCallbackInfo<v8::Value>& info) {
+    auto nodeMap = Nan::ObjectWrap::Unwrap<NodeMap>(info.Holder());
+
+    if (!nodeMap->map) return Nan::ThrowError(releasedMessage());
+    if (!nodeMap->callback) return Nan::ThrowError("No render in progress");
+
+    try {
+        nodeMap->cancel();
+    } catch (const std::exception &ex) {
+        return Nan::ThrowError(ex.what());
+    }
+
+    info.GetReturnValue().SetUndefined();
+}
+
+void NodeMap::cancel() {
+    auto style = map->getStyleJSON();
+
+    map = std::make_unique<mbgl::Map>(backend, mbgl::Size{ 256, 256 },
+            pixelRatio, *this, threadpool, mbgl::MapMode::Still);
+
+    // FIXME: Reload the style after recreating the map. We need to find
+    // a better way of canceling an ongoing rendering on the core level
+    // without resetting the map, which is way too expensive.
+    map->setStyleJSON(style);
+
+    error = std::make_exception_ptr(std::runtime_error("Canceled"));
+    renderFinished();
+}
+
 void NodeMap::AddClass(const Nan::FunctionCallbackInfo<v8::Value>& info) {
     auto nodeMap = Nan::ObjectWrap::Unwrap<NodeMap>(info.Holder());
     if (!nodeMap->map) return Nan::ThrowError(releasedMessage());
@@ -647,7 +684,7 @@ void NodeMap::AddImage(const Nan::FunctionCallbackInfo<v8::Value>& info) {
     std::copy(imageDataBuffer, imageDataBuffer + imageLength, data.get());
     mbgl::PremultipliedImage cPremultipliedImage({ imageWidth, imageHeight}, std::move(data));
 
-    nodeMap->map->addImage(*Nan::Utf8String(info[0]), std::make_unique<mbgl::SpriteImage>(std::move(cPremultipliedImage), pixelRatio));
+    nodeMap->map->addImage(*Nan::Utf8String(info[0]), std::make_unique<mbgl::style::Image>(std::move(cPremultipliedImage), pixelRatio));
 }
 
 void NodeMap::RemoveImage(const Nan::FunctionCallbackInfo<v8::Value>& info) {
