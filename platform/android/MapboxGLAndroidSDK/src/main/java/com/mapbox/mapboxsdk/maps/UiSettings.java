@@ -234,13 +234,12 @@ public final class UiSettings {
       setAttributionMargins(attributionMargins[0], attributionMargins[1],
         attributionMargins[2], attributionMargins[3]);
     } else {
-      int mapboxAttributionIconTopPadding = (int) resources.
-        getDimension(R.dimen.mapbox_attribution_icon_top_padding);
-      int mapboxAttributionIconRightPadding = (int) resources.getDimension(R.dimen.mapbox_attribution_icon_right_padding);
-      int mapboxAttributionIconBottomPadding = (int) resources.getDimension(R.dimen.mapbox_attribution_icon_bottom_padding);
+      int mapboxAttributionTopPadding = (int) resources.getDimension(R.dimen.mapbox_attribution_icon_top_padding);
+      int mapboxAttributionRightPadding = (int) resources.getDimension(R.dimen.mapbox_attribution_icon_right_padding);
+      int mapboxAttributionBottomPadding = (int) resources.getDimension(R.dimen.mapbox_attribution_icon_bottom_padding);
       int mapboxLogoWidth = (int) resources.getDimension(R.dimen.mapbox_logo_width);
-      setAttributionMargins(mapboxLogoWidth, mapboxAttributionIconTopPadding,
-        mapboxAttributionIconRightPadding, mapboxAttributionIconBottomPadding);
+      setAttributionMargins(mapboxLogoWidth, mapboxAttributionTopPadding,mapboxAttributionRightPadding,
+        mapboxAttributionBottomPadding);
     }
 
     int attributionTintColor = options.getAttributionTintColor();
