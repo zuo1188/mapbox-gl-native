@@ -11,6 +11,9 @@ target_sources(mbgl-glfw
     PRIVATE platform/default/mbgl/util/default_styles.cpp
 )
 
+# Suppress GLFW redefining GLAPIENTRY error.
+SET_SOURCE_FILES_PROPERTIES(platform/glfw/glfw_view.cpp PROPERTIES COMPILE_FLAGS -Wno-error)
+
 target_compile_options(mbgl-glfw
     PRIVATE -fvisibility-inlines-hidden
 )
