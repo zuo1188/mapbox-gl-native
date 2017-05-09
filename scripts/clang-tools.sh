@@ -3,8 +3,8 @@
 set -e
 set -o pipefail
 
-CLANG_TIDY=${CLANG_TIDY:-$(scripts/mason.sh PREFIX clang-tidy VERSION 3.9.1)/bin/clang-tidy}
-CLANG_FORMAT=${CLANG_FORMAT:-$(scripts/mason.sh PREFIX clang-format VERSION 3.9.1)/bin/clang-format}
+CLANG_TIDY=${CLANG_TIDY:-$(scripts/mason.sh PREFIX clang-tidy VERSION 4.0.0)/bin/clang-tidy}
+CLANG_FORMAT=${CLANG_FORMAT:-$(scripts/mason.sh PREFIX clang-format VERSION 4.0.0)/bin/clang-format}
 
 command -v ${CLANG_TIDY} >/dev/null 2>&1 || {
     echo "Can't find ${CLANG_TIDY} in PATH."
